@@ -1,0 +1,10 @@
+/Pos-Back/.env
+/Pos-Back/server/__pycache__
+/Pos-Client/src/.env
+/Pos-Client/.env
+/Pos-Client/psql_data
+/psql_data
+/TS-Client/node_modules
+/Pos-Client/
+/Pos-Back/
+/fastApi/
