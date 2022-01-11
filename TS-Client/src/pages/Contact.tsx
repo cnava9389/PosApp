@@ -1,5 +1,6 @@
 import { Component, ComponentProps, onMount } from 'solid-js';
 import { useUserContext } from '../context/UserContext';
+import img1 from '../assets/free-consultation.jpg'
 
 interface ContactProps extends ComponentProps<any> {
     // add props here
@@ -13,8 +14,37 @@ const Contact: Component<ContactProps> = () => {
         animate(false,".contact")
     })
     return (
-        <div class="contact" style={{"opacity":0}}>
-            <h2 >Contact</h2>
+        <div class="contact h-100 d-flex justify-content-center align-items-center" style={{"opacity":0}}>
+            <div class=' w-100 row'>  
+            <div class='col-3'>   
+            </div>
+            <div class='col-6 d-flex justify-content-center align-items-center'>
+                <div class='card h-100 w-75'>
+                    <img style={{'height':'35vh'}} class='card-img-top' src={img1}/>
+                    <div class='text-center card-body'>
+                    <div class='card-title'>
+                        Christian Nava
+                    </div>
+                    <div class='card-subtitle'>
+                        Software Engineer
+                    </div>
+                    <hr/>
+                    <div>
+                        Email: cnava9389@gmail.com
+                    </div>
+                    <div>
+                        Number: 731-394-7332
+                    </div>
+                    <div>
+                        Tambien se habla español
+                    </div>
+                    </div>
+                </div>
+            </div>
+            <div class='col-3'>
+                
+            </div>
+        </div>
         </div>
     )
 }

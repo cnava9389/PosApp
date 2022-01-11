@@ -53,7 +53,7 @@ func (orm *ORM)ReturnDB(dbName string) (*gorm.DB) {
 		log.Fatal("Error loading .env")
 	}
 	
-	dns := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s", os.Getenv("SQL_HOST"),
+	dns := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable", os.Getenv("SQL_HOST"),
 	os.Getenv("SQL_USER"), os.Getenv("SQL_PASSWORD"), dbName, os.Getenv("SQL_PORT"))
 
 	db, err := gorm.Open(postgres.Open(dns), &gorm.Config{
@@ -75,7 +75,7 @@ func (orm *ORM)ReturnDBx() (*gorm.DB) {
 		log.Fatal("Error loading .env")
 	}
 
-	dns := fmt.Sprintf("host=%s user=%s password=%s port=%s", os.Getenv("SQL_HOST"),
+	dns := fmt.Sprintf("host=%s user=%s password=%s port=%s sslmode=disable", os.Getenv("SQL_HOST"),
 	os.Getenv("SQL_USER"), os.Getenv("SQL_PASSWORD"), os.Getenv("SQL_PORT"))
 
 	db, err := gorm.Open(postgres.Open(dns), &gorm.Config{})

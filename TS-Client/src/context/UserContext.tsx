@@ -120,7 +120,7 @@ const animate = async(exit:boolean,  name:string, callback?: Navigator, page?:st
 }
 
 const api = axios.create({
-    baseURL: "http://localhost:8000"
+    baseURL: `${import.meta.env.VITE_POSAPI}`
 })
 
 const callback = (callback:()=>void):boolean => {
@@ -141,12 +141,11 @@ const round = (x:number)=>{
 
 const fetchItems = () => {return api.get<any, AxiosResponse<Item[],any>>("/item/",{withCredentials:true})}
 const fetchOrders = () => {return api.get<any, AxiosResponse<Array<Ticket>,any>>("/order/",{withCredentials:true})}
-const fetchUser = () => { return api.get<any, AxiosResponse<User,any>>("/user/",{withCredentials:true})}
+// const fetchUser = () => { return api.get<any, AxiosResponse<User,any>>("/user/",{withCredentials:true})}
 
 const setUpStore = async(invoke?:boolean) => {
     if(invoke){
         try{ 
-            console.log("setting up")
             const result =  await fetchItems()
             const result2 = await fetchOrders()
             setItems(result.data)

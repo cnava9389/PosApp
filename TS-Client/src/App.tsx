@@ -17,7 +17,7 @@ import Orders from './pages/Orders';
 import Data from './pages/Data';
 import Modal from './components/Modal';
 
-const App: Component = () => {
+const App:Component = () => {
   //!setup initial call for items and orders
   const [{user, navigate, api, sleep, animate, loaded},{setUser, setUpStore, setLoaded}] = useUserContext();
 

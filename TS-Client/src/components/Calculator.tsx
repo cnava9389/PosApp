@@ -9,7 +9,7 @@ interface CalculatorProps extends ComponentProps<any> {
 }
 
 const Calculator: Component<CalculatorProps> = (props: CalculatorProps) => {
-    const [{ticket, api, orders},{setTicket, updateTicket, setNotification, setOrders}] = useUserContext()
+    const [{ticket, api, orders, round},{setTicket, updateTicket, setNotification, setOrders, setModalAnimation}] = useUserContext()
     const addInput = (x: number): undefined =>{
         props.qty()!=0?props.setQty(y=>parseInt(`${y}${x}`)):props.setQty(x)
         return undefined
@@ -45,7 +45,7 @@ const Calculator: Component<CalculatorProps> = (props: CalculatorProps) => {
         updateTicket(-(last.price*last.qty))
         setTicket({...ticket(),items:[...ticket().items.slice(0,-1)]})
     }
-    const pay = () => {console.log("paid")}
+    const pay = () => {setModalAnimation("pay","Paying ticket",[round(ticket().subTotal+ticket().tax),ticket().id])}
     const createOrder = async() => {
         let strList = ""
         ticket().items.forEach((x:TicketItem) => strList += `${JSON.stringify(x)},`)
@@ -119,9 +119,9 @@ const Calculator: Component<CalculatorProps> = (props: CalculatorProps) => {
             </div>
         </div>
             <div class='row'>
-                <div class='col-12 d-flex justify-content-center mb-md-3'>
+                {/* <div class='col-12 d-flex justify-content-center mb-md-3'>
                 <button onClick={pay} class='btn btn-success'>Pay</button>
-                </div>
+                </div> */}
                 <div class='col-12 d-flex justify-content-center mb-md-3'>
                 <button onClick={createOrder} class='btn btn-dark'>Send</button>
                 </div>

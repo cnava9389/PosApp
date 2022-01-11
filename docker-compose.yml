@@ -1,7 +1,23 @@
 version: '3.8'
 
 services:
+  reverse_proxy:
+    image: nginx:1.17.10
+    container_name: reverse_proxy
+    depends_on:
+      - postgres
+      - api
+    volumes:
+      - ./reverse_proxy/nginx.conf:/etc/nginx/nginx.conf
+    ports:
+      - '80:80'
+    networks:
+      - fullstack
+    links:
+      - postgres
+      - api
   postgres:
+    container_name: "postgres_db"
     image: postgres:14.1-alpine
     restart: always
     environment:
@@ -12,6 +28,35 @@ services:
         max-size: 10m
         max-file: "3"
     ports:
-      - '5433:5432' 
+      - '5433:5432'
+    networks: 
+      - fullstack
     volumes:
-      - ./psql_data:/var/lib/postgresql/data     
+      - ./psql_data:/var/lib/postgresql/data
+  api:     
+    container_name: "go_api"
+    restart: always
+    environment:
+      - SQL_DIALECT=postgre
+      -  SQL_DRIVER=sql
+      -  SQL_USER=postgres
+      -  SQL_PASSWORD=postgres
+      -  SQL_HOST=postgres
+      -  SQL_PORT=5432
+      -  SECRET_KEY=56277de1-2c42-4c95-8f3b-a90b05c1b684
+    build:
+      context: .
+      dockerfile: api.Dockerfile
+    ports:
+      - "8000:8000"
+    networks:
+      - fullstack
+    # we are depending on the mysql backend
+    depends_on:
+      - postgres
+    links: 
+      - postgres
+
+networks:
+  fullstack:
+    driver: bridge
