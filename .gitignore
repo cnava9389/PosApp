@@ -4,8 +4,10 @@
 /Pos-Client/.env
 /Pos-Client/psql_data
 /psql_data
+/letsencrypt
 /TS-Client/node_modules
 /Pos-Client/
 /Pos-Back/
 /fastApi/
 /TS-Client/.env
+/TS-Client/dist

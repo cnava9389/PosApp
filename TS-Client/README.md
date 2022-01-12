@@ -1,34 +1,16 @@
-## Usage
+## My Site
 
-Those templates dependencies are maintained via [pnpm](https://pnpm.io) via `pnpm up -Lri`.
+### credentials for test `test@test.com`, `test`
 
-This is the reason you see a `pnpm-lock.yaml`. That being said, any package manager will work. This file can be safely be removed once you clone a template.
+The site uses typescript in combination with solid js and a database to create a web app point of sale system
 
-```bash
-$ npm install # or pnpm install or yarn install
-```
+This app is very bare-bones and has a lot of features that I have yet to implement.
 
-### Learn more on the [Solid Website](https://solidjs.com) and come chat with us on our [Discord](https://discord.com/invite/solidjs)
+as of right now, you must create account to use (except with the above test credentials) the app.
 
-## Available Scripts
+In the app you can create menu items with plenty of different options and functionality, you can then go into the
 
-In the project directory, you can run:
+create order section to create orders and post them to the database. you are also able to pay for the orders in the orders section as well as filter
 
-### `npm dev` or `npm start`
-
-Runs the app in the development mode.<br>
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
-
-The page will reload if you make edits.<br>
-
-### `npm run build`
-
-Builds the app for production to the `dist` folder.<br>
-It correctly bundles Solid in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.<br>
-Your app is ready to be deployed!
-
-## Deployment
-
-You can deploy the `dist` folder to any static host provider (netlify, surge, now, etc.)
+the paid and unpaid orders. Many more things to come ...
+### Go api [Github](https://github.com/cnava9389/PosApp/tree/main/goApi)

@@ -11,9 +11,10 @@ func Start(app *fiber.App, orm *models.ORM) {
 	defer sql.Close()
 
 	app.Use(cors.New(cors.Config{
-		AllowOrigins: "http://localhost:3000, http://10.0.0.196:3000, http://www.navapos.com, https://www.navapos.com, http://73.203.168.150:3000",
+		AllowOrigins: "*",
 		AllowHeaders: "Origin, Content-Type, Accept",
 		AllowCredentials: true,
+		AllowMethods: "GET, POST, PUT, DELETE, HEAD, PATCH, OPTIONS",
 	}))
 	
 	app.Get("/", homeHandler(orm))

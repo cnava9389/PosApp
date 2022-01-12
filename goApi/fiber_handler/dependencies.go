@@ -152,10 +152,10 @@ type User struct {
 
 func homeHandler(orm *models.ORM) func(c *fiber.Ctx) error {
 	fn := func(c *fiber.Ctx) error {
-		db := orm.ReturnDBx()
-		db.Exec("CREATE DATABASE test")
-		db.Table("test.user")
-		db.AutoMigrate(&User{})
+		// db := orm.ReturnDBx()
+		// db.Exec("CREATE DATABASE test")
+		// db.Table("test.user")
+		// db.AutoMigrate(&User{})
 
 		return c.SendString("home")
 	}
