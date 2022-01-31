@@ -159,8 +159,7 @@ type User struct {
 	Name string `json:"name"`
 }
 
-func homeHandler(orm *models.ORM) func(c *fiber.Ctx) error {
-	fn := func(c *fiber.Ctx) error {
+func homeHandler(c *fiber.Ctx) error {
 		// db := orm.ReturnDBx()
 		// db.Exec("CREATE DATABASE test")
 		// db.Table("test.user")
@@ -168,8 +167,6 @@ func homeHandler(orm *models.ORM) func(c *fiber.Ctx) error {
 
 		return c.SendString("home")
 	}
-	return fn
-}
 
 func logout(c *fiber.Ctx) error {
 	deleteCookie(c)
@@ -217,17 +214,16 @@ func checkCookie(c *fiber.Ctx) error {
 	return c.Next()
 }
 
-func checkOrigin(orm *models.ORM) func(c *fiber.Ctx) error {
-	fn := func(c *fiber.Ctx) error {
+func checkOrigin(c *fiber.Ctx) error {
 		host := fmt.Sprintf("http://%s:3000", c.IP())
 
 		fmt.Printf("hosts == %s, \n", host)
-		c.Set("Access-Control-Allow-Origin", host)
+
+		if((c.OriginalURL() == "/user/?native=true" || c.OriginalURL() == "/user/?native=false" || c.OriginalURL() == "/user/") && c.Method() == "POST"){
+			c.Set("Access-Control-Allow-Origin", host)
+		}
 		return c.Next()
 	}
-	return fn
-}
-
 func generateToken(email *string, code *string) (string, error) {
 	_, x := os.LookupEnv("SECRET_KEY")
 	if !x {

@@ -18,10 +18,10 @@ func Start(app *fiber.App, orm *models.ORM) {
 		AllowMethods: "GET, POST, PUT, DELETE, HEAD, PATCH, OPTIONS",
 	}))
 	
+	app.Use(checkOrigin)
+	app.Get("/", homeHandler)
 	app.Post("/login", loginHandler(orm))
 	app.Get("/logout", logout)
-	app.Use(checkOrigin(orm))
-	app.Get("/", homeHandler(orm))
 	
 	user := app.Group("/user")
 	user.Post("/", createAccountHandler(orm))
