@@ -12,6 +12,7 @@ func main() {
 	app := fiber.New()
 	orm := new(models.ORM)
 	orm.Test = false
+	orm.IPs = make([]string, 5)
 	orm.DBs = map[string]*gorm.DB{}
 	orm.RDB = orm.InitiateRestaurant()
 	fmt.Println("Starting")

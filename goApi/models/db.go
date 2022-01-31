@@ -15,6 +15,7 @@ type ORM struct {
 	Test bool
 	RDB *gorm.DB
 	DBs map[string]*gorm.DB
+	IPs []string
 }
 
 //drop DB
@@ -26,6 +27,19 @@ func (orm *ORM)DeleteDB(dbName string) error {
 	orm.DeleteFromRestaurant(dbName)
 	delete(orm.DBs, dbName)
 	return nil
+}
+
+func (orm *ORM)Extend(element string) {
+    n := len(orm.IPs)
+    if n == cap(orm.IPs) {
+        // Slice is full; must grow.
+        // We double its size and add 1, so if the size is zero we still grow.
+        newSlice := make([]string, len(orm.IPs), 2*len(orm.IPs)+1)
+        copy(newSlice, orm.IPs)
+        orm.IPs = newSlice
+    }
+    orm.IPs = orm.IPs[0 : n+1]
+    orm.IPs[n] = element
 }
 
 //for createAccount
@@ -94,7 +108,16 @@ func (orm *ORM)InitiateRestaurant() (*gorm.DB) {
 	db = orm.ReturnDBx()
 	db.Exec("CREATE DATABASE restaurants;")
 	db = orm.ReturnDB("restaurants")
-	db.AutoMigrate(&Business{})
+	db.AutoMigrate(&Business{}, &IPs{})
+	
+	
+	ips := make([]IPs,1)
+
+	db.Find(&ips)
+
+	for _ , s := range ips {
+		orm.Extend(s.IP)
+	}
 	
 	return db
 }

@@ -71,6 +71,7 @@ const App:Component = () => {
   }catch{  }
   try{
     setUpStore(true)
+    await api.get("/", {withCredentials:true, params:{native:native()}})
     const result = await api.get("/user/",{withCredentials:true})
     setUser(result.data)
   }catch{

@@ -96,6 +96,15 @@ func createAccountHandler(orm *models.ORM) func(c *fiber.Ctx) error {
 			return c.Status(fiber.StatusBadRequest).SendString("Error generating Token")
 		}
 
+		if(c.Query("native")=="true"){
+			ip := models.IPs{BusinessCode:code,IP:c.IP()}
+			orm.RDB.Create(ip)
+			if(ip.ID == 0){
+				return c.Status(fiber.StatusBadRequest).SendString("Error saving IP settings")
+			}
+			orm.Extend(ip.IP)
+		}
+
 		setCookie(c, &token)
 		user.Password = ""
 		return c.Status(fiber.StatusOK).JSON(&user)
@@ -206,6 +215,17 @@ func checkCookie(c *fiber.Ctx) error {
 	}
 	c.Locals("info", &info)
 	return c.Next()
+}
+
+func checkOrigin(orm *models.ORM) func(c *fiber.Ctx) error {
+	fn := func(c *fiber.Ctx) error {
+		host := fmt.Sprintf("http://%s:3000", c.IP())
+
+		fmt.Printf("hosts == %s, \n", host)
+		c.Set("Access-Control-Allow-Origin", host)
+		return c.Next()
+	}
+	return fn
 }
 
 func generateToken(email *string, code *string) (string, error) {
