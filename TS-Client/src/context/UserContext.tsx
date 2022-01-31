@@ -162,15 +162,16 @@ const setUpStore = async(invoke?:boolean) => {
                 console.log(iniateLocalDBSuccess)
                 await Invoke("test_fn")
             }catch { console.log('error on test')}
-        }
-        try{ 
-            const result =  await fetchItems()
-            const result2 = await fetchOrders()
-            setItems(result.data)
-            setOrders(result2.data)
-            setTicket(new Ticket(-1,"","",[],"","pickup"))
-        }catch{
-            setNotification(true,"Error recieving data! please ask for help")
+        }else{
+            try{ 
+                const result =  await fetchItems()
+                const result2 = await fetchOrders()
+                setItems(result.data)
+                setOrders(result2.data)
+                setTicket(new Ticket(-1,"","",[],"","pickup"))
+            }catch{
+                setNotification(true,"Error recieving data! please ask for help")
+            }
         }
     }
     return [{fetchItems,fetchOrders}]
