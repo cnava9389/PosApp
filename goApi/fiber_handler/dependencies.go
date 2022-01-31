@@ -21,31 +21,32 @@ type LoginForm struct {
 
 func createAccountHandler(orm *models.ORM) func(c *fiber.Ctx) error {
 	fn := func(c *fiber.Ctx) error {
+		fmt.Println("createing account here")
 		var user models.User
 		
 		if err := c.BodyParser(&user); err != nil {
 			return c.Status(fiber.StatusBadRequest).SendString("Error, invalid credentials")
-
+			
 		}
-
+		
 		if user.Name == "" || user.Password == "" || user.Business == "" {
 			return c.Status(fiber.StatusBadRequest).SendString("Invalid json body, missing name, password, or business")
 		}
-
+		
 		hashedpassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), 10)
 		if err != nil {
 			return c.Status(fiber.StatusBadRequest).SendString("generating hashed password")
 		}
-
+		
 		user.Password = string(hashedpassword)
-
+		
 		var code string
-
+		
 		if user.BusinessCode == ""{
 			checkBusiness := &models.Business{}
-
+			
 			orm.RDB.Where("business = ?",user.Business).First(&checkBusiness)
-
+			
 			if checkBusiness.ID != 0 {
 				return c.Status(fiber.StatusBadRequest).SendString("Business name already exists")
 			}
@@ -64,13 +65,13 @@ func createAccountHandler(orm *models.ORM) func(c *fiber.Ctx) error {
 				orm.DeleteDB(code)
 				return c.Status(fiber.StatusBadRequest).SendString("Error creating account; required => name, password, email, business, and phone")
 			}
-	
+			
 			business := &models.Business{
 				Business: user.Business,
 				Code:     user.BusinessCode,
 				Email:    user.Email,
 			}
-	
+			
 			orm.InsertToRestaurant(business)
 			if business.ID == 0 {
 				sql.Close()
@@ -90,14 +91,15 @@ func createAccountHandler(orm *models.ORM) func(c *fiber.Ctx) error {
 				return c.Status(fiber.StatusBadRequest).SendString("Could not add user to this business")
 			}
 		}
-
+		
+		
 		token, err := generateToken(&user.Email, &code)
 		if err != nil {
 			return c.Status(fiber.StatusBadRequest).SendString("Error generating Token")
 		}
-
+	
 		if(c.Query("native")=="true"){
-			ip := models.IPs{BusinessCode:code,IP:c.IP()}
+			ip := &models.IPs{BusinessCode:code,IP:c.IP()}
 			orm.RDB.Create(ip)
 			if(ip.ID == 0){
 				return c.Status(fiber.StatusBadRequest).SendString("Error saving IP settings")
@@ -166,7 +168,7 @@ func homeHandler(c *fiber.Ctx) error {
 		// db.AutoMigrate(&User{})
 
 		return c.SendString("home")
-	}
+}
 
 func logout(c *fiber.Ctx) error {
 	deleteCookie(c)
@@ -213,17 +215,27 @@ func checkCookie(c *fiber.Ctx) error {
 	c.Locals("info", &info)
 	return c.Next()
 }
-
-func checkOrigin(c *fiber.Ctx) error {
-		host := fmt.Sprintf("http://%s:3000", c.IP())
-
-		fmt.Printf("hosts == %s, \n", host)
-
-		if((c.OriginalURL() == "/user/?native=true" || c.OriginalURL() == "/user/?native=false" || c.OriginalURL() == "/user/") && c.Method() == "POST"){
-			c.Set("Access-Control-Allow-Origin", host)
-		}
-		return c.Next()
-	}
+//!use for loop in this to add to allowed origin list or cors wrapper.
+// func checkOrigin(orm *models.ORM) func(c *fiber.Ctx) bool {
+// 	return func(c *fiber.Ctx) bool {
+// 		host := fmt.Sprintf("http://%s:3000", c.IP())
+// 		fmt.Printf("hosts == %s,\n", host)
+// 		fmt.Println(c.Method())
+// 		fmt.Println(c.OriginalURL())
+// 		if((c.OriginalURL() == "/user/?native=true" || c.OriginalURL() == "/user/?native=false" || c.OriginalURL() == "/user/") && (c.Method() == "OPTIONS" || c.Method() == "POST")){
+// 			fmt.Println("true")
+// 			c.Set("Access-Control-Allow-Methods", "OPTIONS, GET, POST, PUT, DELETE, HEAD, PATCH")
+// 			c.Set("Access-Control-Allow-Origin", host)
+// 			c.Set("Access-Control-Allow-Headers", "Origin, Content-Type, Accept, Accept-Encoding, Accept-Language")
+// 			return true
+// 		}
+// 		for _ , x := range orm.IPs {
+// 			if x == c.IP() {return true}
+// 		}
+// 		fmt.Println("returning false")
+// 		return false
+// 	}
+// }
 func generateToken(email *string, code *string) (string, error) {
 	_, x := os.LookupEnv("SECRET_KEY")
 	if !x {

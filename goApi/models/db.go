@@ -118,6 +118,8 @@ func (orm *ORM)InitiateRestaurant() (*gorm.DB) {
 	for _ , s := range ips {
 		orm.Extend(s.IP)
 	}
+
+	fmt.Println(orm.IPs)
 	
 	return db
 }

@@ -1,24 +1,31 @@
 package fiber_handler
 
 import (
-	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/cors"
+	"fmt"
 	"main/models"
+
+	"github.com/gofiber/fiber/v2"
+	_ "github.com/gofiber/fiber/v2/middleware/cors"
 )
 
 func Start(app *fiber.App, orm *models.ORM) {
 	sql,_ := orm.RDB.DB()
 	defer sql.Close()
 
-	app.Use(cors.New(cors.Config{
-		// AllowOrigins: "http://localhost:3000, https://www.navapos.com, https://posnava.com",
-		AllowOrigins: "https://www.navapos.com, https://posnava.com",
-		AllowHeaders: "Origin, Content-Type, Accept",
-		AllowCredentials: true,
-		AllowMethods: "GET, POST, PUT, DELETE, HEAD, PATCH, OPTIONS",
-	}))
+	app.Use(func(c *fiber.Ctx) error {
+		host := fmt.Sprintf("http://%s:3000", c.IP())
+		c.Set("Access-Control-Allow-Methods", "OPTIONS, GET, POST, PUT, DELETE, HEAD, PATCH")
+		c.Set("Access-Control-Allow-Origin", host)
+		c.Set("Access-Control-Allow-Headers", "Origin, Content-Type, Accept, Accept-Encoding, X-Requested-With")
+		c.Set("Access-Control-Allow-Credentials", "true")
+		c.Set("Content-Type", "application/json")
+		if(c.Method() != "OPTIONS"){
+		return c.Next()
+		}else {
+			return c.SendStatus(fiber.StatusOK)
+		}
+	})
 	
-	app.Use(checkOrigin)
 	app.Get("/", homeHandler)
 	app.Post("/login", loginHandler(orm))
 	app.Get("/logout", logout)
