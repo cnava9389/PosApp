@@ -12,6 +12,7 @@ func Start(app *fiber.App, orm *models.ORM) {
 	sql,_ := orm.RDB.DB()
 	defer sql.Close()
 
+	//!whitelist function missing
 	app.Use(func(c *fiber.Ctx) error {
 		host := fmt.Sprintf("http://%s:3000", c.IP())
 		c.Set("Access-Control-Allow-Methods", "OPTIONS, GET, POST, PUT, DELETE, HEAD, PATCH")
