@@ -1,8 +1,10 @@
 import { createContext, createSignal, useContext, Component, ComponentProps, JSX, Accessor, Setter, onMount} from "solid-js";
-import { AppStore, Details, BaseUser, User, Ticket, Config, Item, Modal, BaseTicket} from './Models'
+import { AppStore, Details, BaseUser, User, Ticket, Config, Item, Modal, BaseTicket, MetaData} from './Models'
 import { gsap } from 'gsap'
 import { useNavigate, Navigator, useLocation } from "solid-app-router"
 import axios,{AxiosResponse} from "axios"
+import { invoke as Invoke } from '@tauri-apps/api/tauri'
+
 
 
 interface UserProviderProps extends ComponentProps<any> {
@@ -24,8 +26,12 @@ const [items, setItems] = createSignal<Array<Item>>([])
 const [loaded, setLoaded] = createSignal(false)
 const [salesTax, setSalesTax] = createSignal(.0975)
 const [orders, setOrders] = createSignal<Array<BaseTicket>>([])
-const [modal,setModal] = createSignal<Modal>({options:"",message:"",args:[]}
-)
+const [modal,setModal] = createSignal<Modal>({options:"",message:"",args:[]})
+const [native, setNative] = createSignal<boolean>(false);
+const [online, setOnline] = createSignal<boolean>(true);
+const [localDB, setLocalDB ] = createSignal<boolean>(true);
+const [metaData, setMetaData] = createSignal<MetaData>({isNative:false,localDataBase:true})
+
 const setNotification = (isError:boolean, message:string) => {
     setDetails({isError:isError,message:message})
     gsap.timeline({defaults:{duration:2}}).to(".notification",{y:"25vh", ease:'bounce'}).to(".notification",{y:"-25vh", delay:3})
@@ -144,7 +150,19 @@ const fetchOrders = () => {return api.get<any, AxiosResponse<Array<Ticket>,any>>
 // const fetchUser = () => { return api.get<any, AxiosResponse<User,any>>("/user/",{withCredentials:true})}
 
 const setUpStore = async(invoke?:boolean) => {
+
     if(invoke){
+        if(native()){
+            try{ 
+                const is_online:boolean = await Invoke("is_online")
+                setOnline(is_online)
+            }catch { }
+            try{ 
+                const iniateLocalDBSuccess = await Invoke("initiate_db")
+                console.log(iniateLocalDBSuccess)
+                await Invoke("test_fn")
+            }catch { console.log('error on test')}
+        }
         try{ 
             const result =  await fetchItems()
             const result2 = await fetchOrders()
@@ -172,7 +190,10 @@ const store:AppStore = [{
     loaded,
     orders,
     modal,
-    round
+    round,
+    native,
+    online,
+    metaData,
 },{
     setDetails,
     setUser,
@@ -187,7 +208,10 @@ const store:AppStore = [{
     updateTicket,
     setOrders,
     setModalAnimation,
-    setModal
+    setModal,
+    setOnline,
+    setNative,
+    setMetaData,
 }]
 
 const UserContext = createContext<AppStore>(store)

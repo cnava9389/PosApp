@@ -7,7 +7,7 @@ interface LoginProps extends ComponentProps<any> {
 }
 
 const Login: Component<LoginProps> = (props: LoginProps) => {
-    const [{navigate, animate, api},{setForm, setNotification, setUser, setPathfunc,setUpStore}] = useUserContext()
+    const [{navigate, animate, api, native},{setForm, setNotification, setUser, setPathfunc,setUpStore}] = useUserContext()
     const [email, setEmail] = createSignal<string>("")
     const [password, setPassword] = createSignal<string>("")
     
@@ -52,6 +52,13 @@ const Login: Component<LoginProps> = (props: LoginProps) => {
                         <div class="mt-2">
                             <button onClick={()=>animate(true,".login",navigate,"/createaccount")} class="btn btn-dark col-6"> Create Account</button>
                         </div>
+                        {
+                            native()?<div class="mt-2">
+                            <button onClick={()=>{
+                                
+                            }} class="btn btn-dark col-6">Local</button>
+                        </div>:<></>
+                        }
                     </div>
                 </div>
             </div>

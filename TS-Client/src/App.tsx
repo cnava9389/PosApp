@@ -1,7 +1,6 @@
-import { Component, createEffect, createRenderEffect, createSignal, onMount } from 'solid-js';
+import { Component, createRenderEffect, onMount } from 'solid-js';
 import { Routes, Route, useLocation } from 'solid-app-router';
 import {useUserContext} from './context/UserContext'
-import {gsap} from "gsap"
 
 import "./index.css"
 import Home from './pages/Home';
@@ -16,10 +15,12 @@ import Settings from './pages/Settings';
 import Orders from './pages/Orders';
 import Data from './pages/Data';
 import Modal from './components/Modal';
+import { invoke } from '@tauri-apps/api/tauri'
+
 
 const App:Component = () => {
   //!setup initial call for items and orders
-  const [{user, navigate, api, sleep, animate, loaded},{setUser, setUpStore, setLoaded}] = useUserContext();
+  const [{user, navigate, api, sleep, animate, loaded, native, online},{setUser, setUpStore, setLoaded, setNative}] = useUserContext();
 
   const helper = (option:boolean) => {
     
@@ -61,18 +62,21 @@ const App:Component = () => {
         //setNotification(true,"please sign in!")
       }
     }
-    
+    animate(false,".app")
 })
   onMount(async ()=>{
+    try{ 
+      const isNative:boolean = await invoke("is_native")
+      setNative(isNative)
+  }catch{  }
   try{
+    setUpStore(true)
     const result = await api.get("/user/",{withCredentials:true})
     setUser(result.data)
-    setUpStore(true)
   }catch{
-    console.log("not logged in")
   }
+  console.log("not logged in, is native ", native(), " is online ", online())
   setLoaded(true)
-  animate(false,".app")
   })
 
   return (

@@ -127,6 +127,11 @@ export interface Config {
     callback?:(x:any)=>void
 }
 
+export interface MetaData {
+    isNative: boolean
+    localDataBase:boolean
+}
+
 export interface AppState {
     orders: Accessor<Array<BaseTicket>>
     items: Accessor<Array<Item>>
@@ -141,6 +146,9 @@ export interface AppState {
     api: AxiosInstance
     callback: (callback: () => void) => boolean
     loaded: Accessor<boolean>
+    online: Accessor<boolean>
+    native: Accessor<boolean>
+    metaData: Accessor<MetaData>
     modal: Accessor<Modal>
     round: (x:number)=>number
 }
@@ -148,6 +156,9 @@ export interface AppState {
 export interface AppAction { 
     setOrders: Setter<Array<BaseTicket>>
     setLoaded: Setter<boolean>
+    setMetaData: Setter<MetaData>
+    setNative: Setter<boolean>
+    setOnline: Setter<boolean>
     setItems: Setter<Array<Item>>
     setPath: Setter<string>
     setTicket: Setter<Ticket>
