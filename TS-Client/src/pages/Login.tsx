@@ -7,7 +7,7 @@ interface LoginProps extends ComponentProps<any> {
 }
 
 const Login: Component<LoginProps> = (props: LoginProps) => {
-    const [{navigate, animate, api, native},{setForm, setNotification, setUser, setPathfunc,setUpStore}] = useUserContext()
+    const [{navigate, animate, api, native, getCookie},{setForm, setNotification, setUser, setPathfunc,setUpStore, setCookie}] = useUserContext()
     const [email, setEmail] = createSignal<string>("")
     const [password, setPassword] = createSignal<string>("")
     
@@ -18,8 +18,11 @@ const Login: Component<LoginProps> = (props: LoginProps) => {
             password: password()
         }
         try{
-            const result = await api.post("/login",form,{withCredentials:true})
-            setUser(result.data)
+            const result = await api.post("/login",form,{withCredentials:true, params:{native:native()}})
+            console.log(result.data)
+            setUser(result.data.user)
+            api.defaults.headers.common['Authorization'] = result.data.api_key;
+            setCookie("POSAPI", result.data.api_key, 8)
             setNotification(false,"Logged in!")
             setUpStore(true)
             animate(true,".login",navigate,"/")
@@ -55,7 +58,7 @@ const Login: Component<LoginProps> = (props: LoginProps) => {
                         {
                             native()?<div class="mt-2">
                             <button onClick={()=>{
-                                
+                                console.log(getCookie("POSAPI"))
                             }} class="btn btn-dark col-6">Local</button>
                         </div>:<></>
                         }

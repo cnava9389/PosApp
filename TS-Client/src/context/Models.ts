@@ -150,7 +150,9 @@ export interface AppState {
     native: Accessor<boolean>
     metaData: Accessor<MetaData>
     modal: Accessor<Modal>
-    round: (x:number)=>number
+    round: (x:number)=>number,
+    getCookie: (name: string) => string | null
+    eraseCookie(name: string): void
 }
 
 export interface AppAction { 
@@ -175,6 +177,7 @@ export interface AppAction {
     }[]>
     updateTicket: (currentTotal: number) => void
     setModal: Setter<Modal>
+    setCookie: (name: string, value: string, days: number) => void
 }
 
 export interface AppStore extends Array<AppState | AppAction> {

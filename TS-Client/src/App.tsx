@@ -20,7 +20,7 @@ import { invoke } from '@tauri-apps/api/tauri'
 
 const App:Component = () => {
   //!setup initial call for items and orders
-  const [{user, navigate, api, sleep, animate, loaded, native, online},{setUser, setUpStore, setLoaded, setNative}] = useUserContext();
+  const [{user, navigate, api, sleep, animate, loaded, native, online, getCookie},{setUser, setUpStore, setLoaded, setNative, setOnline}] = useUserContext();
 
   const helper = (option:boolean) => {
     
@@ -55,8 +55,9 @@ const App:Component = () => {
 
   createRenderEffect(async()=>{
     const path = useLocation().pathname.toLowerCase();
-    await sleep(15)
+    await sleep(20)
     if (user().id === -1 ){
+      console.log(path)
       if (!(path == "/createaccount" || path == "/login" || path == "/contact")) {
         navigate("/login")
         //setNotification(true,"please sign in!")
@@ -69,14 +70,25 @@ const App:Component = () => {
       const isNative:boolean = await invoke("is_native")
       setNative(isNative)
   }catch{  }
-  try{
-    setUpStore(true)
-    await api.get("/", {withCredentials:true, params:{native:native()}})
-    const result = await api.get("/user/",{withCredentials:true})
-    setUser(result.data)
-  }catch{
+  if(!native()){
+    try{
+      api.defaults.headers.common['Authorization'] = getCookie("POSAPI")||""
+      setUpStore(true)
+      const result = await api.get("/user/",{withCredentials:true})
+      setUser(result.data)
+    }catch{
+    }
+  }else{
+      try{ 
+          const is_online:boolean = await invoke("is_online")
+          setOnline(is_online)
+      }catch { }
+      try{ 
+          const iniateLocalDBSuccess = await invoke("initiate_db")
+          console.log(iniateLocalDBSuccess)
+          await invoke("test_fn")
+      }catch { console.log('error on test')}
   }
-  console.log("not logged in, is native ", native(), " is online ", online())
   setLoaded(true)
   })
 

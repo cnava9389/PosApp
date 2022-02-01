@@ -7,13 +7,14 @@ interface NavbarProps extends ComponentProps<any> {
 }
 
 const Navbar: Component<NavbarProps> = (props: NavbarProps) => {
-  const [{ api, navigate, animate, path }, { setNotification, setUser }] =
+  const [{ api, navigate, animate, path, eraseCookie}, { setNotification, setUser }] =
     useUserContext();
   const logout = async () => {
     try {
-      await api.get("/logout", { withCredentials: true });
-      setNotification(false, "Logged out!");
+      // await api.get("/logout", { withCredentials: true });
       setUser(testUser);
+      setNotification(false, "Logged out!");
+      eraseCookie("POSAPI")
       navigate("/login");
     } catch {
       //

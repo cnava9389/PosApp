@@ -32,6 +32,29 @@ const [online, setOnline] = createSignal<boolean>(true);
 const [localDB, setLocalDB ] = createSignal<boolean>(true);
 const [metaData, setMetaData] = createSignal<MetaData>({isNative:false,localDataBase:true})
 
+function setCookie(name:string,value:string,days:number) {
+    var expires = "";
+    if (days) {
+        var date = new Date();
+        date.setTime(date.getTime() + (days*60*60*1000));
+        expires = "; expires=" + date.toUTCString();
+    }
+    document.cookie = name + "=" + (value || "")  + expires + "; path=/";
+}
+function getCookie(name:string) {
+    var nameEQ = name + "=";
+    var ca = document.cookie.split(';');
+    for(var i=0;i < ca.length;i++) {
+        var c = ca[i];
+        while (c.charAt(0)==' ') c = c.substring(1,c.length);
+        if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
+    }
+    return null;
+}
+function eraseCookie(name:string) {   
+    document.cookie = name +'=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+}
+
 const setNotification = (isError:boolean, message:string) => {
     setDetails({isError:isError,message:message})
     gsap.timeline({defaults:{duration:2}}).to(".notification",{y:"25vh", ease:'bounce'}).to(".notification",{y:"-25vh", delay:3})
@@ -150,29 +173,18 @@ const fetchOrders = () => {return api.get<any, AxiosResponse<Array<Ticket>,any>>
 // const fetchUser = () => { return api.get<any, AxiosResponse<User,any>>("/user/",{withCredentials:true})}
 
 const setUpStore = async(invoke?:boolean) => {
-
+    // setCookie("POSAPI","deezNuts",1)
     if(invoke){
-        if(native()){
-            try{ 
-                const is_online:boolean = await Invoke("is_online")
-                setOnline(is_online)
-            }catch { }
-            try{ 
-                const iniateLocalDBSuccess = await Invoke("initiate_db")
-                console.log(iniateLocalDBSuccess)
-                await Invoke("test_fn")
-            }catch { console.log('error on test')}
-        }else{
-            try{ 
-                const result =  await fetchItems()
-                const result2 = await fetchOrders()
-                setItems(result.data)
-                setOrders(result2.data)
-                setTicket(new Ticket(-1,"","",[],"","pickup"))
-            }catch{
-                setNotification(true,"Error recieving data! please ask for help")
-            }
+        try{ 
+            const result =  await fetchItems()
+            const result2 = await fetchOrders()
+            setItems(result.data)
+            setOrders(result2.data)
+            setTicket(new Ticket(-1,"","",[],"","pickup"))
+        }catch{
+            // setNotification(true,"Error recieving data! please ask for help")
         }
+        
     }
     return [{fetchItems,fetchOrders}]
 }
@@ -195,6 +207,8 @@ const store:AppStore = [{
     native,
     online,
     metaData,
+    getCookie,
+    eraseCookie
 },{
     setDetails,
     setUser,
@@ -213,6 +227,7 @@ const store:AppStore = [{
     setOnline,
     setNative,
     setMetaData,
+    setCookie
 }]
 
 const UserContext = createContext<AppStore>(store)
