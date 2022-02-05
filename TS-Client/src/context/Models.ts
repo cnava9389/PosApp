@@ -1,6 +1,7 @@
 import { Accessor, JSX, Setter } from 'solid-js'
 import { Navigator } from "solid-app-router"
 import { AxiosInstance, AxiosResponse } from "axios"
+import { Socket } from 'socket.io-client'
 
 export interface BaseUser {
     id: number
@@ -153,6 +154,7 @@ export interface AppState {
     round: (x:number)=>number,
     getCookie: (name: string) => string | null
     eraseCookie(name: string): void
+    socket: Accessor<WebSocket>
 }
 
 export interface AppAction { 
@@ -173,11 +175,14 @@ export interface AppAction {
          setState: Array<Setter<string | number | string[]>>, config?: Array<Config>) => JSX.Element
     setPathfunc: ()=>void
     setUpStore: (invoke?: boolean | undefined) => Promise<{
-        fetchItems: () => Promise<AxiosResponse<Item[], any>>;
+        fetchItems: () => Promise<unknown>;
+        fetchOrders: () => Promise<AxiosResponse<Ticket[], any>>;
     }[]>
+    
     updateTicket: (currentTotal: number) => void
     setModal: Setter<Modal>
     setCookie: (name: string, value: string, days: number) => void
+    setSocket: Setter<WebSocket>
 }
 
 export interface AppStore extends Array<AppState | AppAction> {

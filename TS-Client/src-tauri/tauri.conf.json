@@ -4,8 +4,8 @@
     "version": "0.1.0"
   },
   "build": {
-    "distDir": "./dist",
-    "devPath": "http://10.0.0.182:3000",
+    "distDir": "../dist",
+    "devPath": "http://10.0.0.196:3000",
     "beforeDevCommand": "",
     "beforeBuildCommand": ""
   },

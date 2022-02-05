@@ -7,11 +7,15 @@ interface ContactProps extends ComponentProps<any> {
 }
 
 const Contact: Component<ContactProps> = () => {
-    const [{animate},{setPathfunc}] = useUserContext()
+    const [{animate, socket},{setPathfunc}] = useUserContext()
 
     onMount(()=>{
         setPathfunc()
         animate(false,".contact")
+        //!
+        socket().addEventListener("test",(event:Event) => {
+            console.log("test ran\n",event)
+          })
     })
     return (
         <div class="contact h-100 d-flex justify-content-center align-items-center" style={{"opacity":0}}>

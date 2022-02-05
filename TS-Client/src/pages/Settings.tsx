@@ -1,6 +1,9 @@
 import { Component, ComponentProps, onMount, createSignal} from 'solid-js';
 import { useUserContext } from '../context/UserContext';
 import {Item} from "../context/Models"
+import { AxiosResponse } from 'axios';
+import { invoke } from '@tauri-apps/api/tauri'
+
 
 interface SettingsProps extends ComponentProps<any> {
     // add props here
@@ -83,15 +86,16 @@ const Settings: Component<SettingsProps> = () => {
 export default Settings;
 
 const CreateItem = () => {
-    const [{api},{setForm, setNotification, setUpStore, setItems}] = useUserContext()
+    const [{api, native},{setForm, setNotification, setUpStore, setItems}] = useUserContext()
     const [name, setName] = createSignal("")
     const [price, setPrice] = createSignal<number>(0.0)
     const [type, setType] = createSignal("Food")
     const [description, setDescription] = createSignal("")
 
+    //!*
     const submit = async(e:any) => {
         e.preventDefault()
-        const [{fetchItems}] = await setUpStore()
+        // const [{fetchItems}] = await setUpStore()
         const form: Item = {
             name:name(),
             price:price(),
@@ -99,11 +103,18 @@ const CreateItem = () => {
             description:description()
         }
         try{
-            const result = await api.post("/item/",form,{withCredentials:true})
+            let result: AxiosResponse<any, any>;
+            if(!native()){
+                result = await api.post("/item/",form,{withCredentials:true})
+            }else{
+                result =  await invoke("create_item", {jsType: form.type, name: 
+                    form.name, description: form.description, price: form.price})
+            }
             setNotification(false,"Created Item!")
-            await fetchItems()
+            // await fetchItems()
             setItems((x:Item[])=>[...x,result.data])
         }catch(err){
+            console.log(err)
             setNotification(true,"Error creating Item!")
         }
         setName("")
@@ -128,24 +139,31 @@ const CreateItem = () => {
     </div>
 }
 const DeleteItem = () => {
-    const [{api},{setNotification,setItems}] = useUserContext()
-    const [id, setId] = createSignal(-1)
+    const [{api, native},{setNotification,setItems}] = useUserContext()
+    const [id, setId] = createSignal(0)
+
+    //!*
     const submit = async(e:any) => {
         e.preventDefault()
         const idLocal = id()
-        if (id() == -1) {
+        if (id() == 0) {
             return undefined
         }
         try{ 
-            await api.delete(`/item/${id()}`,{withCredentials:true})
+            if(!native()){
+                await api.delete(`/item/${id()}`,{withCredentials:true})
+            }else{
+                await invoke("delete_item", {itemId:id()})
+            }
             setNotification(false,"Deleted Item")
-            setId(-1)
+            setId(0)
             setItems((x:Array<Item>)=>x.filter((x:Item)=>{
                 if (x.id != idLocal){
                     return x
                 }
             }))
-        }catch{
+        }catch(err){
+            console.log(err)
             setNotification(true,"Error deleting item")
         }
     }
@@ -158,7 +176,7 @@ const DeleteItem = () => {
                 <div>
                     <label class="col-12">ID</label>
                     <input type="number" value={id()} onChange={(e:any)=>{
-                        setId(e.target.value)
+                        setId(parseInt(e.target.value))
                     }} class="col-6" />
                 </div>
             <button type="submit" class="btn btn-danger mt-2">Delete</button>

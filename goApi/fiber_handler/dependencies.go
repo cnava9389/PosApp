@@ -19,6 +19,11 @@ type LoginForm struct {
 	Password string `json:"password"`
 }
 
+type LoginResponse struct {
+	User models.User `json:"user"`
+	ApiKey string `json:"api_key"`
+}
+
 func createAccountHandler(orm *models.ORM) func(c *fiber.Ctx) error {
 	fn := func(c *fiber.Ctx) error {
 		fmt.Println("createing account here")
@@ -72,7 +77,7 @@ func createAccountHandler(orm *models.ORM) func(c *fiber.Ctx) error {
 				Email:    user.Email,
 			}
 			
-			orm.InsertToRestaurant(business)
+			orm.InsertToMetadata(business)
 			if business.ID == 0 {
 				sql.Close()
 				orm.DeleteDB(code)
@@ -104,12 +109,14 @@ func createAccountHandler(orm *models.ORM) func(c *fiber.Ctx) error {
 			if(ip.ID == 0){
 				return c.Status(fiber.StatusBadRequest).SendString("Error saving IP settings")
 			}
-			orm.Extend(ip.IP)
+			orm.AddIP(ip.IP)
 		}
 
-		setCookie(c, &token)
 		user.Password = ""
-		return c.Status(fiber.StatusOK).JSON(&user)
+		return c.Status(fiber.StatusOK).JSON(&LoginResponse{
+			User: user,
+			ApiKey: token,
+		})
 	}
 	return fn
 }
@@ -150,12 +157,34 @@ func loginHandler(orm *models.ORM) func(c *fiber.Ctx) error {
 			return c.Status(fiber.StatusBadRequest).SendString("Error generating Token")
 		}
 
-		setCookie(c, &token)
+		if(c.Query("native")=="true"){
+			ip := &models.IPs{IP:c.IP()}
+			orm.RDB.Find(ip)
+			if(ip.ID == 0){
+				ip.BusinessCode = business.Code
+				ip.IP = c.IP()
+				orm.RDB.Create(&ip)
+				if(ip.ID == 0){
+					return c.Status(fiber.StatusBadRequest).SendString("could not add IP to this business")
+				}
+				orm.AddIP(ip.IP)
+			}else if (ip.IP != c.IP()){
+				if (c.IP() != "10.0.0.182" && c.IP() != "10.0.0.196") {
+					return c.Status(fiber.StatusBadRequest).SendString("cannot log in form taken IP ")
+				}
+			}
+		}
+
 		user.Password=""
-		return c.JSON(&user)
+
+		return c.JSON(&LoginResponse{
+			User: user,
+			ApiKey: token,
+		})
 	}
 	return fn
 }
+
 
 type User struct {
 	Name string `json:"name"`
@@ -170,43 +199,45 @@ func homeHandler(c *fiber.Ctx) error {
 		return c.SendString("home")
 }
 
-func logout(c *fiber.Ctx) error {
-	deleteCookie(c)
-	return c.SendString("logged out")
-}
+// func logout(c *fiber.Ctx) error {
+// 	deleteCookie(c)
+// 	return c.SendString("logged out")
+// }
 
-func setCookie(c *fiber.Ctx, str *string) {
-	cookie := fiber.Cookie{
-		Name:    "POSAPI",
-		Value:   *str,
-		Expires: time.Now().Add(8 * time.Hour),
-	}
+// func setCookie(c *fiber.Ctx, str *string) {
+// 	cookie := fiber.Cookie{
+// 		Name:    "POSAPI",
+// 		Value:   *str,
+// 		Expires: time.Now().Add(8 * time.Hour),
+// 		Secure: true,
+// 		HTTPOnly: true,
+// 		SameSite: "None",
+// 	}
+// 	c.Cookie(&cookie)
+// }
 
-	c.Cookie(&cookie)
-}
+// func deleteCookie(c *fiber.Ctx) {
+// 	cookie := fiber.Cookie{
+// 		Name:    "POSAPI",
+// 		Value:   "",
+// 		Expires: time.Now().Add(-time.Hour),
+// 	}
 
-func deleteCookie(c *fiber.Ctx) {
-	cookie := fiber.Cookie{
-		Name:    "POSAPI",
-		Value:   "",
-		Expires: time.Now().Add(-time.Hour),
-	}
-
-	c.Cookie(&cookie)
-}
+// 	c.Cookie(&cookie)
+// }
 
 func checkCookie(c *fiber.Ctx) error {
 	godotenv.Load()
-	cookie := c.Cookies("POSAPI")
+	cookie := c.Get("Authorization")
 	claim := new(jwt.StandardClaims)
 	pToken, err := jwt.ParseWithClaims(cookie, claim, func(token *jwt.Token) (interface{}, error) {
 		return []byte(os.Getenv("SECRET_KEY")), nil
 	})
-
+	
 	if err != nil || !pToken.Valid {
 		return c.Status(fiber.StatusUnauthorized).SendString(err.Error())
 	}
-
+	
 	dbName, email := claim.Audience, claim.Issuer
 	info := models.CookieInfo{
 		DB:    dbName,
@@ -215,27 +246,55 @@ func checkCookie(c *fiber.Ctx) error {
 	c.Locals("info", &info)
 	return c.Next()
 }
-//!use for loop in this to add to allowed origin list or cors wrapper.
-// func checkOrigin(orm *models.ORM) func(c *fiber.Ctx) bool {
-// 	return func(c *fiber.Ctx) bool {
-// 		host := fmt.Sprintf("http://%s:3000", c.IP())
-// 		fmt.Printf("hosts == %s,\n", host)
-// 		fmt.Println(c.Method())
-// 		fmt.Println(c.OriginalURL())
-// 		if((c.OriginalURL() == "/user/?native=true" || c.OriginalURL() == "/user/?native=false" || c.OriginalURL() == "/user/") && (c.Method() == "OPTIONS" || c.Method() == "POST")){
-// 			fmt.Println("true")
-// 			c.Set("Access-Control-Allow-Methods", "OPTIONS, GET, POST, PUT, DELETE, HEAD, PATCH")
-// 			c.Set("Access-Control-Allow-Origin", host)
-// 			c.Set("Access-Control-Allow-Headers", "Origin, Content-Type, Accept, Accept-Encoding, Accept-Language")
-// 			return true
-// 		}
-// 		for _ , x := range orm.IPs {
-// 			if x == c.IP() {return true}
-// 		}
-// 		fmt.Println("returning false")
-// 		return false
-// 	}
-// }
+
+func CORS(orm *models.ORM) func(c *fiber.Ctx) error {
+	return func(c *fiber.Ctx) error {
+
+		url := c.OriginalURL()
+
+		if(orm.IPs[c.IP()] || (url == "/user/?native=true" ||
+		url =="/user/?native=false" || url == "/user/" || url == "/login" ||
+		url == "/login?native=false" || url == "/login?native=true")){
+			var port string;
+			var host string;
+			if (c.Secure()){
+				port = "433"
+			}else{
+				port = "3000"
+			}
+			//* caution with this section. not sure if stable
+			if (strings.Contains(url,"native") && strings.Contains(url,"true")){
+				host = fmt.Sprintf("http://%s:%s",c.IP(),port)
+			}else{
+				if(orm.Test){
+					host = fmt.Sprintf("http://10.0.0.196:%s",port)
+				}else{
+					host = fmt.Sprintf("http://155.138.203.239:%s",port)
+				}
+			}
+			//*
+			c.Set("Access-Control-Allow-Methods", "OPTIONS, GET, POST, PUT, DELETE, HEAD, PATCH")
+			c.Set("Access-Control-Allow-Origin", host)
+			c.Set("Origin", "Vary")
+			c.Set("Access-Control-Allow-Headers", "Origin, Content-Type, Accept, Accept-Encoding, X-Requested-With, Authorization")
+			c.Set("Access-Control-Allow-Credentials", "true")
+			c.Set("Access-Control-Expose-Headers", "Set-Cookie")
+			c.Set("Content-Type", "application/json")
+			if(c.Method() == "OPTIONS"){
+				return c.SendStatus(fiber.StatusOK)
+				}else{
+					return c.Next()
+			}
+
+		}else{
+			fmt.Printf("Ip not accepted: %s", c.IP())
+			return c.Status(401).SendString("not whitelisted IP")
+		}
+
+		
+	}
+}
+
 func generateToken(email *string, code *string) (string, error) {
 	_, x := os.LookupEnv("SECRET_KEY")
 	if !x {

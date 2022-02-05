@@ -15,7 +15,7 @@ type ORM struct {
 	Test bool
 	RDB *gorm.DB
 	DBs map[string]*gorm.DB
-	IPs []string
+	IPs map[string]bool
 }
 
 //drop DB
@@ -24,22 +24,13 @@ func (orm *ORM)DeleteDB(dbName string) error {
 	db := orm.ReturnDBx()
 	db.Exec(fmt.Sprintf("DROP DATABASE IF EXISTS %s;", dbName))
 
-	orm.DeleteFromRestaurant(dbName)
+	orm.DeleteFromMetadata(dbName)
 	delete(orm.DBs, dbName)
 	return nil
 }
 
-func (orm *ORM)Extend(element string) {
-    n := len(orm.IPs)
-    if n == cap(orm.IPs) {
-        // Slice is full; must grow.
-        // We double its size and add 1, so if the size is zero we still grow.
-        newSlice := make([]string, len(orm.IPs), 2*len(orm.IPs)+1)
-        copy(newSlice, orm.IPs)
-        orm.IPs = newSlice
-    }
-    orm.IPs = orm.IPs[0 : n+1]
-    orm.IPs[n] = element
+func (orm *ORM)AddIP(element string) {
+    orm.IPs[element] = true;
 }
 
 //for createAccount
@@ -62,10 +53,10 @@ func (orm *ORM)ReturnDB(dbName string) (*gorm.DB) {
 		return orm.DBs[dbName]
 	}
 
-	err := loadEnv()
-	if err != nil {
-		log.Fatal("Error loading .env")
-	}
+	// err := LoadEnv()
+	// if err != nil {
+	// 	log.Fatal("Error loading .env")
+	// }
 	
 	dns := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable", os.Getenv("SQL_HOST"),
 	os.Getenv("SQL_USER"), os.Getenv("SQL_PASSWORD"), dbName, os.Getenv("SQL_PORT"))
@@ -84,10 +75,10 @@ func (orm *ORM)ReturnDBx() (*gorm.DB) {
 	if orm.DBs["psql"] != nil {
 		return orm.DBs["psql"]
 	}
-	err := loadEnv()
-	if err != nil {
-		log.Fatal("Error loading .env")
-	}
+	// err := LoadEnv()
+	// if err != nil {
+	// 	log.Fatal("Error loading .env")
+	// }
 
 	dns := fmt.Sprintf("host=%s user=%s password=%s port=%s sslmode=disable", os.Getenv("SQL_HOST"),
 	os.Getenv("SQL_USER"), os.Getenv("SQL_PASSWORD"), os.Getenv("SQL_PORT"))
@@ -102,12 +93,12 @@ func (orm *ORM)ReturnDBx() (*gorm.DB) {
 	return db
 }
 
-func (orm *ORM)InitiateRestaurant() (*gorm.DB) {
+func (orm *ORM)InitiateMetadata() (*gorm.DB) {
 	var db *gorm.DB
 	
 	db = orm.ReturnDBx()
-	db.Exec("CREATE DATABASE restaurants;")
-	db = orm.ReturnDB("restaurants")
+	db.Exec("CREATE DATABASE metadata;")
+	db = orm.ReturnDB("metadata")
 	db.AutoMigrate(&Business{}, &IPs{})
 	
 	
@@ -116,23 +107,21 @@ func (orm *ORM)InitiateRestaurant() (*gorm.DB) {
 	db.Find(&ips)
 
 	for _ , s := range ips {
-		orm.Extend(s.IP)
+		orm.AddIP(s.IP)
 	}
-
-	fmt.Println(orm.IPs)
 	
 	return db
 }
 
-func (orm *ORM)DeleteFromRestaurant(dbName string){
+func (orm *ORM)DeleteFromMetadata(dbName string){
 	orm.RDB.Where("code = ?", dbName).Delete(&Business{})
 }
 
-func (orm *ORM)InsertToRestaurant(business *Business) {
+func (orm *ORM)InsertToMetadata(business *Business) {
 	orm.RDB.Create(business)
 }
 
-func loadEnv() error {
+func LoadEnv() error {
 	_, loaded := os.LookupEnv("SQL_PORT")
 	if !loaded {
 		err := godotenv.Load()

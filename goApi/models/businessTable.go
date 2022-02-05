@@ -12,3 +12,4 @@ type IPs struct {
 	IP string `json:"ip" gorm:"type:varchar(50);unique;default:null;not null"`
 	BusinessCode string `json:"business" binding:"required" gorm:"type:varchar(75);default:null;not null"`
 }
+

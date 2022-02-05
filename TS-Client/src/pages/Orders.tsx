@@ -70,7 +70,7 @@ const Orders: Component = () => {
 export default Orders;
 
 const All = (props: OrdersProps) => {
-//   const [{ orders }, { }] = useUserContext();
+   const [{ native }, { }] = useUserContext();
   const helper = () => {
     switch(props.orders().length){
         case 0: 
@@ -79,14 +79,24 @@ const All = (props: OrdersProps) => {
             return <>
             {
                 props.orders().map((x: BaseTicket) => {
-                    let date = x.dateTime.split("T");
-                    const time = date[1].split(".");
+                  console.log(x)
+                  let date;
+                  let time
+                    if(native()){
+                      date = x.dateTime.split(" ");
+                      time = date[1]
+                      console.log(date)
+                    }else{
+
+                      date = x.dateTime.split("T");
+                      time = date[1].split(".");
+                    }
                     return (
                       <div class="h-50 w-100 card text-center shadow-lg" >
                         <div class="card-title">ID: {x.id}{x.name?` Name: ${x.name}`:''}</div>
                         <div class="card-subtitle">
                           <div className="row">
-                            <div>{`${date[0]}; ${time[0]}`}</div>
+                            <div>{`${date[0]}; ${!native()?time[0]:time}`}</div>
                           </div>
                           <i
                             class="bi bi-chevron-double-down col-1 btn"

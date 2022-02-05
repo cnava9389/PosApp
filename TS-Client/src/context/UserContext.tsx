@@ -3,7 +3,8 @@ import { AppStore, Details, BaseUser, User, Ticket, Config, Item, Modal, BaseTic
 import { gsap } from 'gsap'
 import { useNavigate, Navigator, useLocation } from "solid-app-router"
 import axios,{AxiosResponse} from "axios"
-import { invoke as Invoke } from '@tauri-apps/api/tauri'
+import { invoke } from '@tauri-apps/api/tauri'
+import { io, Socket } from "socket.io-client"
 
 
 
@@ -29,8 +30,9 @@ const [orders, setOrders] = createSignal<Array<BaseTicket>>([])
 const [modal,setModal] = createSignal<Modal>({options:"",message:"",args:[]})
 const [native, setNative] = createSignal<boolean>(false);
 const [online, setOnline] = createSignal<boolean>(true);
-const [localDB, setLocalDB ] = createSignal<boolean>(true);
+// const [localDB, setLocalDB ] = createSignal<boolean>(true);
 const [metaData, setMetaData] = createSignal<MetaData>({isNative:false,localDataBase:true})
+const [socket, setSocket] = createSignal<WebSocket>(new WebSocket(`${import.meta.env.VITE_SOCKET}socket`))
 
 function setCookie(name:string,value:string,days:number) {
     var expires = "";
@@ -63,7 +65,6 @@ const setModalAnimation = (options:string, message:string, args?:unknown[]) => {
     setModal({options, message, args})
     gsap.timeline({defaults:{duration:1}}).to(".Modal",{y:"25vh"})
 }
-
 const updateTicket = (currentTotal:number) => {
     const newSubTotal = Math.round(((currentTotal + ticket().subTotal) + Number.EPSILON) * 100) / 100;
     const newTax = Math.round(((newSubTotal*salesTax()) + Number.EPSILON) * 100) / 100;
@@ -168,20 +169,38 @@ const round = (x:number)=>{
     return Math.round((x + Number.EPSILON) * 100) / 100
 }
 
-const fetchItems = () => {return api.get<any, AxiosResponse<Item[],any>>("/item/",{withCredentials:true})}
-const fetchOrders = () => {return api.get<any, AxiosResponse<Array<Ticket>,any>>("/order/",{withCredentials:true})}
+//!*
+const fetchItems = (): Promise<unknown> => {
+    if(native()){
+        return invoke("get_items")
+    }
+    return api.get<any, AxiosResponse<Item[],any>>("/item/",{withCredentials:true})
+}
+//!*
+const fetchOrders = (): Promise<AxiosResponse<Ticket[], any>> => {
+    if(native()){
+        return invoke("get_orders")
+    }
+    return api.get<any, AxiosResponse<Array<Ticket>,any>>("/order/",{withCredentials:true})
+}
 // const fetchUser = () => { return api.get<any, AxiosResponse<User,any>>("/user/",{withCredentials:true})}
-
+//!*
 const setUpStore = async(invoke?:boolean) => {
     // setCookie("POSAPI","deezNuts",1)
     if(invoke){
         try{ 
-            const result =  await fetchItems()
-            const result2 = await fetchOrders()
-            setItems(result.data)
-            setOrders(result2.data)
+            let result = await fetchItems() as AxiosResponse<Array<Item>,any> | Array<Item>
+            let result2 = await fetchOrders() as AxiosResponse<Array<BaseTicket>,any> | Array<BaseTicket>
+
+            result = result.data?result.data:result 
+            result2 = result2.data?result2.data:result2 
+
+            setItems(result as Array<Item>)
+            setOrders(result2 as Array<BaseTicket>)
             setTicket(new Ticket(-1,"","",[],"","pickup"))
-        }catch{
+
+        }catch(err){
+            console.log(err)
             // setNotification(true,"Error recieving data! please ask for help")
         }
         
@@ -208,7 +227,8 @@ const store:AppStore = [{
     online,
     metaData,
     getCookie,
-    eraseCookie
+    eraseCookie,
+    socket
 },{
     setDetails,
     setUser,
@@ -227,7 +247,8 @@ const store:AppStore = [{
     setOnline,
     setNative,
     setMetaData,
-    setCookie
+    setCookie,
+    setSocket
 }]
 
 const UserContext = createContext<AppStore>(store)

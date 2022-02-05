@@ -1,5 +1,5 @@
 import { Component, ComponentProps } from "solid-js";
-import { Link, useLocation } from "solid-app-router";
+import { Link } from "solid-app-router";
 import { useUserContext, testUser } from "../context/UserContext";
 
 interface NavbarProps extends ComponentProps<any> {
@@ -7,8 +7,7 @@ interface NavbarProps extends ComponentProps<any> {
 }
 
 const Navbar: Component<NavbarProps> = (props: NavbarProps) => {
-  const [{ api, navigate, animate, path, eraseCookie}, { setNotification, setUser }] =
-    useUserContext();
+  const [{ navigate, animate, path, eraseCookie}, { setNotification, setUser }] = useUserContext();
   const logout = async () => {
     try {
       // await api.get("/logout", { withCredentials: true });

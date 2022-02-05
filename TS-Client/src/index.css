@@ -70,11 +70,14 @@ hr.vr{
   height:85vh;
   display: inline-block;
 }
+.w {
+  width: 6vw;
+}
 
-@media only screen and (max-height:900px){
+@media only screen and (max-height:800px){
   .calcContainer{
-      height:60vh;
-      width:85%;
+      height:50vh;
+      width:100%;
   }
 }
 @media only screen and (max-width:992px){
@@ -82,13 +85,19 @@ hr.vr{
       height:40vh;
       width:80%;
   }
+  .w {
+    width:5vw;
+  }
 }
-@media only screen and (max-width:768px){
+/* @media only screen and (max-width:768px){
   .calcContainer{
       height:50vh;
       width:80%;
   }
-}
+  .w {
+    width:125vw;
+  }
+} */
 
 .laptop-w {
   width:98vw;
