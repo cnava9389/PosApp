@@ -29,6 +29,7 @@ const Login: Component<LoginProps> = (props: LoginProps) => {
             }
             animate(true,".login",navigate,"/")
         }catch(err){
+            console.log(err)
             setNotification(true,"Error logging in!")
         }
     }

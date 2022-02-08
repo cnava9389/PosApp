@@ -55,7 +55,7 @@ const App:Component = () => {
 
   createRenderEffect(async()=>{
     const path = useLocation().pathname.toLowerCase();
-    await sleep(20)
+    await sleep(30)
     if (user().id === -1 ){
       if (!(path == "/createaccount" || path == "/login" || path == "/contact")) {
         navigate("/login")
@@ -76,11 +76,11 @@ const App:Component = () => {
   if(!native()){
     try{
       api.defaults.headers.common['Authorization'] = getCookie("POSAPI")||""
+      console.log(getCookie("POSAPI"))
       setUpStore(true)
       const result = await api.get("/user/",{withCredentials:true})
       setUser(result.data)
       setUpSocket()
-
     }catch{
     }
   }else{

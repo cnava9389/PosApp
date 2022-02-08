@@ -14,8 +14,8 @@ const Navbar: Component<NavbarProps> = (props: NavbarProps) => {
       setUser(testUser);
       setNotification(false, "Logged out!");
       eraseCookie("POSAPI")
-      socket().close()
       navigate("/login");
+      socket().close()
     } catch {
       //
     }

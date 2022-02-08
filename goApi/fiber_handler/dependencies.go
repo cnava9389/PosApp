@@ -102,16 +102,15 @@ func createAccountHandler(orm *models.ORM) func(c *fiber.Ctx) error {
 		if err != nil {
 			return c.Status(fiber.StatusBadRequest).SendString("Error generating Token")
 		}
-	
-		if(c.Query("native")=="true"){
+		if(strings.ToLower(user.Name)!="test"){
+
 			ip := &models.IPs{BusinessCode:code,IP:c.IP()}
 			orm.RDB.Create(ip)
 			if(ip.ID == 0){
 				return c.Status(fiber.StatusBadRequest).SendString("Error saving IP settings")
 			}
-			orm.AddIP(ip.IP)
+			orm.AddIP(ip.IP)	
 		}
-
 		user.Password = ""
 		return c.Status(fiber.StatusOK).JSON(&LoginResponse{
 			User: user,
@@ -156,8 +155,8 @@ func loginHandler(orm *models.ORM) func(c *fiber.Ctx) error {
 		if err != nil {
 			return c.Status(fiber.StatusBadRequest).SendString("Error generating Token")
 		}
-
-		if(c.Query("native")=="true"){
+		println(user.Name)
+		if(strings.ToLower(user.Name)!="test"){
 			ip := &models.IPs{IP:c.IP()}
 			orm.RDB.Find(ip)
 			if(ip.ID == 0){
@@ -173,6 +172,9 @@ func loginHandler(orm *models.ORM) func(c *fiber.Ctx) error {
 					return c.Status(fiber.StatusBadRequest).SendString("cannot log in form taken IP ")
 				}
 			}
+		}else{
+			println("else path on login")
+			orm.AddIP(c.IP())
 		}
 
 		user.Password=""
@@ -226,26 +228,31 @@ func homeHandler(c *fiber.Ctx) error {
 // 	c.Cookie(&cookie)
 // }
 
-func checkCookie(c *fiber.Ctx) error {
-	godotenv.Load()
-	cookie := c.Get("Authorization")
-	claim := new(jwt.StandardClaims)
-	pToken, err := jwt.ParseWithClaims(cookie, claim, func(token *jwt.Token) (interface{}, error) {
-		return []byte(os.Getenv("SECRET_KEY")), nil
-	})
+func checkCookie(orm *models.ORM) func(c *fiber.Ctx) error {
+	return func(c *fiber.Ctx) error {
+		godotenv.Load()
+		cookie := c.Get("Authorization")
+		claim := new(jwt.StandardClaims)
+		pToken, err := jwt.ParseWithClaims(cookie, claim, func(token *jwt.Token) (interface{}, error) {
+			return []byte(os.Getenv("SECRET_KEY")), nil
+		})
+		dbName, email := claim.Audience, claim.Issuer
+		info := models.CookieInfo{
+			DB:    dbName,
+			Email: email,
+		}
+		
+		if err != nil || !pToken.Valid {
+			if(strings.ToLower(dbName)=="test"){
+				delete(orm.IPs,c.IP())
+			}
+			return c.Status(fiber.StatusUnauthorized).SendString(err.Error())
+		}
+		
+		c.Locals("info", &info)
 	
-	if err != nil || !pToken.Valid {
-		return c.Status(fiber.StatusUnauthorized).SendString(err.Error())
+		return c.Next()
 	}
-	
-	dbName, email := claim.Audience, claim.Issuer
-	info := models.CookieInfo{
-		DB:    dbName,
-		Email: email,
-	}
-	c.Locals("info", &info)
-
-	return c.Next()
 }
 
 func CORS(orm *models.ORM) func(c *fiber.Ctx) error {
@@ -253,7 +260,9 @@ func CORS(orm *models.ORM) func(c *fiber.Ctx) error {
 
 		url := c.OriginalURL()
 		println(url)
-
+		fmt.Printf("%s\n",orm.IPs)
+		
+		c.Set("Access-Control-Allow-Credentials", "true")
 		if(orm.IPs[c.IP()] || (url == "/user/?native=true" ||
 		url =="/user/?native=false" || url == "/user/" || url == "/login" ||
 		url == "/login?native=false" || url == "/login?native=true")){
@@ -265,13 +274,13 @@ func CORS(orm *models.ORM) func(c *fiber.Ctx) error {
 				port = "3000"
 			}
 			//* caution with this section. not sure if stable
-			if (strings.Contains(url,"native") && strings.Contains(url,"true")){
+			if (strings.Contains(url,"native=true")){
 				host = fmt.Sprintf("http://%s:%s",c.IP(),port)
 			}else{
 				if(orm.Test){
 					host = fmt.Sprintf("http://10.0.0.196:%s",port)
 				}else{
-					host = fmt.Sprintf("http://155.138.203.239:%s",port)
+					host = "https://www.navapos.com"
 				}
 			}
 			//*
@@ -279,7 +288,6 @@ func CORS(orm *models.ORM) func(c *fiber.Ctx) error {
 			c.Set("Access-Control-Allow-Origin", host)
 			c.Set("Origin", "Vary")
 			c.Set("Access-Control-Allow-Headers", "Origin, Content-Type, Accept, Accept-Encoding, X-Requested-With, Authorization")
-			c.Set("Access-Control-Allow-Credentials", "true")
 			c.Set("Access-Control-Expose-Headers", "Set-Cookie")
 			c.Set("Content-Type", "application/json")
 			if(c.Method() == "OPTIONS"){
@@ -289,7 +297,7 @@ func CORS(orm *models.ORM) func(c *fiber.Ctx) error {
 			}
 
 		}else{
-			fmt.Printf("Ip not accepted: %s", c.IP())
+			fmt.Printf("Ip not accepted: %s\n", c.IP())
 			return c.Status(401).SendString("not whitelisted IP")
 		}
 
