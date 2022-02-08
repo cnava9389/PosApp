@@ -7,7 +7,7 @@ interface LoginProps extends ComponentProps<any> {
 }
 
 const Login: Component<LoginProps> = (props: LoginProps) => {
-    const [{navigate, animate, api, native, user},{setForm, setNotification, setUser, setPathfunc,setUpStore, setCookie}] = useUserContext()
+    const [{navigate, animate, api, native, user, socket},{setForm, setNotification, setUser, setPathfunc,setUpStore, setCookie, setUpSocket}] = useUserContext()
     const [email, setEmail] = createSignal<string>("")
     const [password, setPassword] = createSignal<string>("")
     
@@ -24,6 +24,9 @@ const Login: Component<LoginProps> = (props: LoginProps) => {
             setCookie("POSAPI", result.data.api_key, 8)
             setNotification(false,"Logged in!")
             setUpStore(true)
+            if(socket().readyState != 1){
+                setUpSocket()
+            }
             animate(true,".login",navigate,"/")
         }catch(err){
             setNotification(true,"Error logging in!")

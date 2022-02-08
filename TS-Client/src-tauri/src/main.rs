@@ -9,7 +9,7 @@ use std::sync::{Arc, Mutex};
 use lazy_static::lazy_static;
 
 lazy_static! {
-  static ref CONNECTION: Arc<Mutex<Connection>> = Arc::new(Mutex::new(Connection::open("./src/store.db3".to_string()).expect("Unable to open store.db3")));
+  static ref CONNECTION: Arc<Mutex<Connection>> = Arc::new(Mutex::new(Connection::open("./store.db3".to_string()).expect("Unable to open store.db3")));
 }
 
 #[derive(Debug, Serialize, Deserialize)]

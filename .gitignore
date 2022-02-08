@@ -13,3 +13,4 @@
 /TS-Client/dist
 /TS-Client/src-tauri/WixTools
 /TS-Client/src-tauri/target/
+/TS-Client/.env.production

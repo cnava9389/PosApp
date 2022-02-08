@@ -6,9 +6,9 @@ import (
 	"os"
 	"strings"
 	"time"
-
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/websocket/v2"
 	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 	"golang.org/x/crypto/bcrypt"
@@ -244,6 +244,7 @@ func checkCookie(c *fiber.Ctx) error {
 		Email: email,
 	}
 	c.Locals("info", &info)
+
 	return c.Next()
 }
 
@@ -251,6 +252,7 @@ func CORS(orm *models.ORM) func(c *fiber.Ctx) error {
 	return func(c *fiber.Ctx) error {
 
 		url := c.OriginalURL()
+		println(url)
 
 		if(orm.IPs[c.IP()] || (url == "/user/?native=true" ||
 		url =="/user/?native=false" || url == "/user/" || url == "/login" ||
@@ -313,4 +315,17 @@ func generateToken(email *string, code *string) (string, error) {
 	}
 
 	return token, nil
+}
+
+func originCheck(orm *models.ORM) func(c * fiber.Ctx) error {
+	return func(c *fiber.Ctx) error {
+		// IsWebSocketUpgrade returns true if the client
+		// requested upgrade to the WebSocket protocol.
+		_, ok := orm.IPs[c.IP()]
+		if (ok && websocket.IsWebSocketUpgrade(c)) {
+			c.Locals("allowed", true)
+			return c.Next()
+		}
+		return fiber.ErrUpgradeRequired
+	}
 }

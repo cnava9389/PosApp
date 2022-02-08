@@ -7,7 +7,8 @@
     "distDir": "../dist",
     "devPath": "http://10.0.0.196:3000",
     "beforeDevCommand": "",
-    "beforeBuildCommand": ""
+    "beforeBuildCommand": "yarn build",
+    "withGlobalTauri": true
   },
   "tauri": {
     "bundle": {
@@ -15,7 +16,7 @@
       "targets": "all",
       "identifier": "com.tauri.dev",
       "icon": [
-        "icons/posapp.ico"
+        "icons/icon.ico"
       ],
       "resources": [],
       "externalBin": [],

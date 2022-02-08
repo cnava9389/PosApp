@@ -4,14 +4,12 @@ import (
 	"fmt"
 	"main/fiber_handler"
 	"main/models"
-	"main/socket"
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
 	"os"
 )
 
 func main() {
-	socket.Main()
 	app := fiber.New()
 	orm := new(models.ORM)
 	err := models.LoadEnv()

@@ -4,7 +4,7 @@ import { gsap } from 'gsap'
 import { useNavigate, Navigator, useLocation } from "solid-app-router"
 import axios,{AxiosResponse} from "axios"
 import { invoke } from '@tauri-apps/api/tauri'
-import { io, Socket } from "socket.io-client"
+
 
 
 
@@ -12,7 +12,7 @@ interface UserProviderProps extends ComponentProps<any> {
     // add props here
 }
 const date = new Date()
-export const testUser = new User(-1,"","","","","","","","","","","")
+export const testUser = new User(-1,"","","","","","","","","","","","")
 export const testTicketItem = {qty:1,name:"Taco",price:0.0,description:"something",type:"food",id:-1}
 export const testTicket = {id:-1,credit:false,dateTime:`${date.toLocaleDateString()} ${date.getHours()}:${date.getMinutes()}`,description:"",
 employee:"",items:[],name:"",paid:false,subTotal:0.0,tax:0.0,type:"pickup"}
@@ -32,7 +32,29 @@ const [native, setNative] = createSignal<boolean>(false);
 const [online, setOnline] = createSignal<boolean>(true);
 // const [localDB, setLocalDB ] = createSignal<boolean>(true);
 const [metaData, setMetaData] = createSignal<MetaData>({isNative:false,localDataBase:true})
-const [socket, setSocket] = createSignal<WebSocket>(new WebSocket(`${import.meta.env.VITE_SOCKET}socket`))
+const [socket, setSocket] = createSignal<WebSocket>({} as WebSocket)
+
+const setUpSocket = () => {
+    setSocket(new WebSocket(`${import.meta.env.VITE_SOCKET}/socket/`))
+    socket().addEventListener("open", ()=>{
+        socket().send(JSON.stringify({type:"join",data:user().businessCode}))
+      })
+      socket().addEventListener("message", (event)=>{
+            const message:{type:string,data:string} = JSON.parse(event.data)
+            console.log(message)
+            switch(message.type){
+                case "message":
+                    console.log("from socket\n",message.data)
+                    break;
+                default: 
+                    console.log("could not find message type for ",message.type)
+            }
+
+      })
+      socket().addEventListener("error", (event)=>{
+        console.log("error occurred\n",event)
+      })
+}
 
 function setCookie(name:string,value:string,days:number) {
     var expires = "";
@@ -248,7 +270,8 @@ const store:AppStore = [{
     setNative,
     setMetaData,
     setCookie,
-    setSocket
+    setSocket,
+    setUpSocket
 }]
 
 const UserContext = createContext<AppStore>(store)

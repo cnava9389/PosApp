@@ -1,7 +1,7 @@
 import { Accessor, JSX, Setter } from 'solid-js'
 import { Navigator } from "solid-app-router"
 import { AxiosInstance, AxiosResponse } from "axios"
-import { Socket } from 'socket.io-client'
+import {Socket} from "net"
 
 export interface BaseUser {
     id: number
@@ -16,6 +16,7 @@ export interface BaseUser {
     zipCode: string
     apt: string 
     auth: string
+    businessCode:string
 } 
 
 export interface Item {
@@ -102,10 +103,11 @@ export class User implements BaseUser {
     zipCode: string;
     apt: string;
     auth:string;
+    businessCode:string
 
     constructor(id: number, name: string, ppic: string, email: string, phone: string,
          street: string, street2: string, city: string, state: string, zipCode: string,
-         apt: string, auth: string){
+         apt: string, auth: string, businessCode: string){
             this.id = id
             this.name = name;
             this.ppic = ppic;
@@ -118,6 +120,7 @@ export class User implements BaseUser {
             this.zipCode = zipCode;
             this.apt = apt;
             this.auth = auth;
+            this.businessCode = businessCode;
          }
 }
 export interface Config {
@@ -183,6 +186,7 @@ export interface AppAction {
     setModal: Setter<Modal>
     setCookie: (name: string, value: string, days: number) => void
     setSocket: Setter<WebSocket>
+    setUpSocket: () => void
 }
 
 export interface AppStore extends Array<AppState | AppAction> {

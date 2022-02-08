@@ -13,9 +13,9 @@ const Contact: Component<ContactProps> = () => {
         setPathfunc()
         animate(false,".contact")
         //!
-        socket().addEventListener("test",(event:Event) => {
-            console.log("test ran\n",event)
-          })
+        // socket().addEventListener("message",(event:MessageEvent) => {
+        //     console.log("test ran\n",event)
+        //   })
     })
     return (
         <div class="contact h-100 d-flex justify-content-center align-items-center" style={{"opacity":0}}>

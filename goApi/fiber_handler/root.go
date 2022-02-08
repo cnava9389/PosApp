@@ -3,19 +3,18 @@ package fiber_handler
 import (
 	"main/models"
 	"main/socket"
-
 	"github.com/gofiber/fiber/v2"
-	_ "github.com/gofiber/fiber/v2/middleware/cors"
 )
 
 func Start(app *fiber.App, orm *models.ORM) {
 	sql,_ := orm.RDB.DB()
 	defer sql.Close()
+	s:= socket.NewServer()
 
-	go socket.Main()
-
-	
 	app.Use(CORS(orm))
+	app.Get("/socket", originCheck(orm))
+
+	app.Get("/socket", socket.WsEndpoint(s))
 	app.Post("/login", loginHandler(orm))
 	// app.Get("/logout", logout)
 	app.Get("/", homeHandler)
@@ -42,11 +41,12 @@ func Start(app *fiber.App, orm *models.ORM) {
 	order.Put("/", models.UpdateOrder(orm))
 	//! work on this
 	order.Delete("/", models.DeleteOrder)
-
+	
 	app.Use(func(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusNotFound).SendString("404 could not find that!")
 	})
-
+	
+	// socket.Main()
 	if err := app.Listen(":8000"); err != nil {
 		panic(err)
 	}

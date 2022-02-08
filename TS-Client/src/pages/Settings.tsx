@@ -86,7 +86,7 @@ const Settings: Component<SettingsProps> = () => {
 export default Settings;
 
 const CreateItem = () => {
-    const [{api, native},{setForm, setNotification, setUpStore, setItems}] = useUserContext()
+    const [{api, native, socket},{setForm, setNotification, setUpStore, setItems}] = useUserContext()
     const [name, setName] = createSignal("")
     const [price, setPrice] = createSignal<number>(0.0)
     const [type, setType] = createSignal("Food")
@@ -106,9 +106,11 @@ const CreateItem = () => {
             let result: AxiosResponse<any, any>;
             if(!native()){
                 result = await api.post("/item/",form,{withCredentials:true})
+                // socket().send(JSON.stringify({type:"broadcast",data:{type:"addItem",data:result.data}}))
             }else{
                 result =  await invoke("create_item", {jsType: form.type, name: 
                     form.name, description: form.description, price: form.price})
+                // console.log(result)
             }
             setNotification(false,"Created Item!")
             // await fetchItems()
