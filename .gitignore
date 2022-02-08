@@ -14,3 +14,8 @@
 /TS-Client/src-tauri/WixTools
 /TS-Client/src-tauri/target/
 /TS-Client/.env.production
+/goApi/cert.pem
+/goApi/fiber_handler/cert.pem
+/goApi/fiber_handler/fullchain.pem
+/goApi/fiber_handler/privkey.pem
+/goApi/privkey.pem

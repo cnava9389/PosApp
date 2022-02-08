@@ -52,6 +52,7 @@ services:
       dockerfile: api.Dockerfile
     ports:
       - "8000:8000"
+      - "433:433"
     networks:
       - fullstack
     # we are depending on the mysql backend

@@ -76,7 +76,6 @@ const App:Component = () => {
   if(!native()){
     try{
       api.defaults.headers.common['Authorization'] = getCookie("POSAPI")||""
-      console.log(getCookie("POSAPI"))
       setUpStore(true)
       const result = await api.get("/user/",{withCredentials:true})
       setUser(result.data)

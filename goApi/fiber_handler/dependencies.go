@@ -265,7 +265,7 @@ func CORS(orm *models.ORM) func(c *fiber.Ctx) error {
 		c.Set("Access-Control-Allow-Credentials", "true")
 		if(orm.IPs[c.IP()] || (url == "/user/?native=true" ||
 		url =="/user/?native=false" || url == "/user/" || url == "/login" ||
-		url == "/login?native=false" || url == "/login?native=true")){
+		url == "/login?native=false" || url == "/login?native=true" || url =="/socket/")){
 			var port string;
 			var host string;
 			if (c.Secure()){

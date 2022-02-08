@@ -19,6 +19,7 @@ RUN go mod download
 
 # Copy and build the app
 COPY ./goApi .
+COPY ./letsencrypt/live/api.navapos.com .
 
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -installsuffix cgo -o /go/bin/api
 

@@ -47,8 +47,15 @@ func Start(app *fiber.App, orm *models.ORM) {
 	})
 	
 	// socket.Main()
-	if err := app.Listen(":8000"); err != nil {
-		panic(err)
+	if(orm.Test){
+		if err := app.Listen(":8000"); err != nil {
+			panic(err)
+		}
+		}else{
+		if err := app.Listen(":8000"); err != nil {
+		// if err := app.ListenTLS(":8000","./letsencrypt/live/api.navapos.com/cert.pem","../../letsencrypt/live/api.navapos.com/privkey.pem"); err != nil {
+			panic(err)
+		}
 	}
 
 }
