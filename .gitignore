@@ -11,3 +11,5 @@
 /fastApi/
 /TS-Client/.env
 /TS-Client/dist
+/TS-Client/src-tauri/target
+/TS-Client/src-tauri/WixTools
