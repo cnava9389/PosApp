@@ -1,15 +1,18 @@
 import { createContext, createSignal, useContext, Component, ComponentProps, JSX, Accessor, Setter, onMount} from "solid-js";
-import { AppStore, Details, BaseUser, User, Ticket, Config, Item, Modal, BaseTicket} from './Models'
+import { AppStore, Details, BaseUser, User, Ticket, Config, Item, Modal, BaseTicket, MetaData} from './Models'
 import { gsap } from 'gsap'
 import { useNavigate, Navigator, useLocation } from "solid-app-router"
 import axios,{AxiosResponse} from "axios"
+import { invoke } from '@tauri-apps/api/tauri'
+
+
 
 
 interface UserProviderProps extends ComponentProps<any> {
     // add props here
 }
 const date = new Date()
-export const testUser = new User(-1,"","","","","","","","","","","")
+export const testUser = new User(-1,"","","","","","","","","","","","")
 export const testTicketItem = {qty:1,name:"Taco",price:0.0,description:"something",type:"food",id:-1}
 export const testTicket = {id:-1,credit:false,dateTime:`${date.toLocaleDateString()} ${date.getHours()}:${date.getMinutes()}`,description:"",
 employee:"",items:[],name:"",paid:false,subTotal:0.0,tax:0.0,type:"pickup"}
@@ -24,8 +27,58 @@ const [items, setItems] = createSignal<Array<Item>>([])
 const [loaded, setLoaded] = createSignal(false)
 const [salesTax, setSalesTax] = createSignal(.0975)
 const [orders, setOrders] = createSignal<Array<BaseTicket>>([])
-const [modal,setModal] = createSignal<Modal>({options:"",message:"",args:[]}
-)
+const [modal,setModal] = createSignal<Modal>({options:"",message:"",args:[]})
+const [native, setNative] = createSignal<boolean>(false);
+const [online, setOnline] = createSignal<boolean>(true);
+// const [localDB, setLocalDB ] = createSignal<boolean>(true);
+const [metaData, setMetaData] = createSignal<MetaData>({isNative:false,localDataBase:true})
+const [socket, setSocket] = createSignal<WebSocket>({} as WebSocket)
+
+const setUpSocket = () => {
+    setSocket(new WebSocket(`${import.meta.env.VITE_SOCKET}/socket/`))
+    socket().addEventListener("open", ()=>{
+        socket().send(JSON.stringify({type:"join",data:user().businessCode}))
+      })
+      socket().addEventListener("message", (event)=>{
+            const message:{type:string,data:string} = JSON.parse(event.data)
+            console.log(message)
+            switch(message.type){
+                case "message":
+                    console.log("from socket\n",message.data)
+                    break;
+                default: 
+                    console.log("could not find message type for ",message.type)
+            }
+
+      })
+      socket().addEventListener("error", (event)=>{
+        console.log("error occurred\n",event)
+      })
+}
+
+function setCookie(name:string,value:string,days:number) {
+    var expires = "";
+    if (days) {
+        var date = new Date();
+        date.setTime(date.getTime() + (days*60*60*1000));
+        expires = "; expires=" + date.toUTCString();
+    }
+    document.cookie = name + "=" + (value || "")  + expires + "; path=/";
+}
+function getCookie(name:string) {
+    var nameEQ = name + "=";
+    var ca = document.cookie.split(';');
+    for(var i=0;i < ca.length;i++) {
+        var c = ca[i];
+        while (c.charAt(0)==' ') c = c.substring(1,c.length);
+        if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
+    }
+    return null;
+}
+function eraseCookie(name:string) {   
+    document.cookie = name +'=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+}
+
 const setNotification = (isError:boolean, message:string) => {
     setDetails({isError:isError,message:message})
     gsap.timeline({defaults:{duration:2}}).to(".notification",{y:"25vh", ease:'bounce'}).to(".notification",{y:"-25vh", delay:3})
@@ -34,7 +87,6 @@ const setModalAnimation = (options:string, message:string, args?:unknown[]) => {
     setModal({options, message, args})
     gsap.timeline({defaults:{duration:1}}).to(".Modal",{y:"25vh"})
 }
-
 const updateTicket = (currentTotal:number) => {
     const newSubTotal = Math.round(((currentTotal + ticket().subTotal) + Number.EPSILON) * 100) / 100;
     const newTax = Math.round(((newSubTotal*salesTax()) + Number.EPSILON) * 100) / 100;
@@ -139,21 +191,41 @@ const round = (x:number)=>{
     return Math.round((x + Number.EPSILON) * 100) / 100
 }
 
-const fetchItems = () => {return api.get<any, AxiosResponse<Item[],any>>("/item/",{withCredentials:true})}
-const fetchOrders = () => {return api.get<any, AxiosResponse<Array<Ticket>,any>>("/order/",{withCredentials:true})}
+//!*
+const fetchItems = (): Promise<unknown> => {
+    if(native()){
+        return invoke("get_items")
+    }
+    return api.get<any, AxiosResponse<Item[],any>>("/item/",{withCredentials:true})
+}
+//!*
+const fetchOrders = (): Promise<AxiosResponse<Ticket[], any>> => {
+    if(native()){
+        return invoke("get_orders")
+    }
+    return api.get<any, AxiosResponse<Array<Ticket>,any>>("/order/",{withCredentials:true})
+}
 // const fetchUser = () => { return api.get<any, AxiosResponse<User,any>>("/user/",{withCredentials:true})}
-
+//!*
 const setUpStore = async(invoke?:boolean) => {
+    // setCookie("POSAPI","deezNuts",1)
     if(invoke){
         try{ 
-            const result =  await fetchItems()
-            const result2 = await fetchOrders()
-            setItems(result.data)
-            setOrders(result2.data)
+            let result = await fetchItems() as AxiosResponse<Array<Item>,any> | Array<Item>
+            let result2 = await fetchOrders() as AxiosResponse<Array<BaseTicket>,any> | Array<BaseTicket>
+
+            result = result.data?result.data:result 
+            result2 = result2.data?result2.data:result2 
+
+            setItems(result as Array<Item>)
+            setOrders(result2 as Array<BaseTicket>)
             setTicket(new Ticket(-1,"","",[],"","pickup"))
-        }catch{
-            setNotification(true,"Error recieving data! please ask for help")
+
+        }catch(err){
+            console.log(err)
+            // setNotification(true,"Error recieving data! please ask for help")
         }
+        
     }
     return [{fetchItems,fetchOrders}]
 }
@@ -172,7 +244,13 @@ const store:AppStore = [{
     loaded,
     orders,
     modal,
-    round
+    round,
+    native,
+    online,
+    metaData,
+    getCookie,
+    eraseCookie,
+    socket
 },{
     setDetails,
     setUser,
@@ -187,7 +265,13 @@ const store:AppStore = [{
     updateTicket,
     setOrders,
     setModalAnimation,
-    setModal
+    setModal,
+    setOnline,
+    setNative,
+    setMetaData,
+    setCookie,
+    setSocket,
+    setUpSocket
 }]
 
 const UserContext = createContext<AppStore>(store)

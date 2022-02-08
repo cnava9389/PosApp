@@ -39,6 +39,7 @@ services:
     container_name: "go_api"
     restart: always
     environment:
+      -  TEST=false
       -  SQL_DIALECT=postgre
       -  SQL_DRIVER=sql
       -  SQL_USER=postgres

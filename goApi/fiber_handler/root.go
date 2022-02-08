@@ -1,25 +1,23 @@
 package fiber_handler
 
 import (
-	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/cors"
 	"main/models"
+	"main/socket"
+	"github.com/gofiber/fiber/v2"
 )
 
 func Start(app *fiber.App, orm *models.ORM) {
 	sql,_ := orm.RDB.DB()
 	defer sql.Close()
+	s:= socket.NewServer()
 
-	app.Use(cors.New(cors.Config{
-		AllowOrigins: "http://localhost:3000, https://www.navapos.com, https://posnava.com",
-		AllowHeaders: "Origin, Content-Type, Accept",
-		AllowCredentials: true,
-		AllowMethods: "GET, POST, PUT, DELETE, HEAD, PATCH, OPTIONS",
-	}))
-	
-	app.Get("/", homeHandler(orm))
+	app.Use(CORS(orm))
+	app.Get("/socket", originCheck(orm))
+
+	app.Get("/socket", socket.WsEndpoint(s))
 	app.Post("/login", loginHandler(orm))
-	app.Get("/logout", logout)
+	// app.Get("/logout", logout)
+	app.Get("/", homeHandler)
 	
 	user := app.Group("/user")
 	user.Post("/", createAccountHandler(orm))
@@ -35,20 +33,22 @@ func Start(app *fiber.App, orm *models.ORM) {
 	item.Post("/", models.AddItem(orm))
 	item.Delete("/:id", models.DeleteItem(orm))
 	item.Put("/:id", models.UpdateItem(orm))
-	//! work on this
+	
 	order := app.Group("order", checkCookie)
 	order.Get("/:id", models.GetOrder(orm))
 	order.Get("/", models.GetOrders(orm))
 	order.Post("/", models.AddOrder(orm))
-	order.Delete("/", models.DeleteOrder)
 	order.Put("/", models.UpdateOrder(orm))
-
-
+	//! work on this
+	order.Delete("/", models.DeleteOrder)
+	
 	app.Use(func(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusNotFound).SendString("404 could not find that!")
 	})
 	
+	// socket.Main()
 	if err := app.Listen(":8000"); err != nil {
 		panic(err)
 	}
+
 }

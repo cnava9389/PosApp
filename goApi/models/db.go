@@ -15,6 +15,7 @@ type ORM struct {
 	Test bool
 	RDB *gorm.DB
 	DBs map[string]*gorm.DB
+	IPs map[string]bool
 }
 
 //drop DB
@@ -23,9 +24,13 @@ func (orm *ORM)DeleteDB(dbName string) error {
 	db := orm.ReturnDBx()
 	db.Exec(fmt.Sprintf("DROP DATABASE IF EXISTS %s;", dbName))
 
-	orm.DeleteFromRestaurant(dbName)
+	orm.DeleteFromMetadata(dbName)
 	delete(orm.DBs, dbName)
 	return nil
+}
+
+func (orm *ORM)AddIP(element string) {
+    orm.IPs[element] = true;
 }
 
 //for createAccount
@@ -48,10 +53,10 @@ func (orm *ORM)ReturnDB(dbName string) (*gorm.DB) {
 		return orm.DBs[dbName]
 	}
 
-	err := loadEnv()
-	if err != nil {
-		log.Fatal("Error loading .env")
-	}
+	// err := LoadEnv()
+	// if err != nil {
+	// 	log.Fatal("Error loading .env")
+	// }
 	
 	dns := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable", os.Getenv("SQL_HOST"),
 	os.Getenv("SQL_USER"), os.Getenv("SQL_PASSWORD"), dbName, os.Getenv("SQL_PORT"))
@@ -70,10 +75,10 @@ func (orm *ORM)ReturnDBx() (*gorm.DB) {
 	if orm.DBs["psql"] != nil {
 		return orm.DBs["psql"]
 	}
-	err := loadEnv()
-	if err != nil {
-		log.Fatal("Error loading .env")
-	}
+	// err := LoadEnv()
+	// if err != nil {
+	// 	log.Fatal("Error loading .env")
+	// }
 
 	dns := fmt.Sprintf("host=%s user=%s password=%s port=%s sslmode=disable", os.Getenv("SQL_HOST"),
 	os.Getenv("SQL_USER"), os.Getenv("SQL_PASSWORD"), os.Getenv("SQL_PORT"))
@@ -88,26 +93,35 @@ func (orm *ORM)ReturnDBx() (*gorm.DB) {
 	return db
 }
 
-func (orm *ORM)InitiateRestaurant() (*gorm.DB) {
+func (orm *ORM)InitiateMetadata() (*gorm.DB) {
 	var db *gorm.DB
 	
 	db = orm.ReturnDBx()
-	db.Exec("CREATE DATABASE restaurants;")
-	db = orm.ReturnDB("restaurants")
-	db.AutoMigrate(&Business{})
+	db.Exec("CREATE DATABASE metadata;")
+	db = orm.ReturnDB("metadata")
+	db.AutoMigrate(&Business{}, &IPs{})
+	
+	
+	ips := make([]IPs,1)
+
+	db.Find(&ips)
+
+	for _ , s := range ips {
+		orm.AddIP(s.IP)
+	}
 	
 	return db
 }
 
-func (orm *ORM)DeleteFromRestaurant(dbName string){
+func (orm *ORM)DeleteFromMetadata(dbName string){
 	orm.RDB.Where("code = ?", dbName).Delete(&Business{})
 }
 
-func (orm *ORM)InsertToRestaurant(business *Business) {
+func (orm *ORM)InsertToMetadata(business *Business) {
 	orm.RDB.Create(business)
 }
 
-func loadEnv() error {
+func LoadEnv() error {
 	_, loaded := os.LookupEnv("SQL_PORT")
 	if !loaded {
 		err := godotenv.Load()

@@ -1,7 +1,6 @@
-import { Component, createEffect, createRenderEffect, createSignal, onMount } from 'solid-js';
+import { Component, createRenderEffect, onCleanup, onMount } from 'solid-js';
 import { Routes, Route, useLocation } from 'solid-app-router';
 import {useUserContext} from './context/UserContext'
-import {gsap} from "gsap"
 
 import "./index.css"
 import Home from './pages/Home';
@@ -16,10 +15,11 @@ import Settings from './pages/Settings';
 import Orders from './pages/Orders';
 import Data from './pages/Data';
 import Modal from './components/Modal';
+import { invoke } from '@tauri-apps/api/tauri'
 
 const App:Component = () => {
-  //!setup initial call for items and orders
-  const [{user, navigate, api, sleep, animate, loaded},{setUser, setUpStore, setLoaded}] = useUserContext();
+  const [{user, navigate, api, sleep, animate, loaded, native, getCookie, socket},
+  {setUser, setUpStore, setLoaded, setNative, setOnline, setUpSocket, setNotification}] = useUserContext();
 
   const helper = (option:boolean) => {
     
@@ -46,6 +46,7 @@ const App:Component = () => {
               <Route path="/*all" element={<PageNotFound/>}/>
             </Routes>
             </div>
+
         </>
       case false:
         return <div class="d-flex justify-content-center align-items-center" style={{"height":"100vh"}}><h1 >Loading...</h1></div>
@@ -54,25 +55,49 @@ const App:Component = () => {
 
   createRenderEffect(async()=>{
     const path = useLocation().pathname.toLowerCase();
-    await sleep(15)
+    await sleep(20)
     if (user().id === -1 ){
       if (!(path == "/createaccount" || path == "/login" || path == "/contact")) {
         navigate("/login")
         //setNotification(true,"please sign in!")
       }
     }
-    
+    animate(false,".app")
 })
   onMount(async ()=>{
-  try{
-    const result = await api.get("/user/",{withCredentials:true})
-    setUser(result.data)
-    setUpStore(true)
-  }catch{
-    console.log("not logged in")
+  try{ 
+    // window.__TAURI__.
+    // invoke("is_native").then(x => setNotification(false,`${x}`)).catch((e)=>setNotification(true,`${e.message}`))
+    const isNative:boolean = await invoke("is_native")
+    setNative(isNative)
+
+
+  }catch{  }
+  if(!native()){
+    try{
+      api.defaults.headers.common['Authorization'] = getCookie("POSAPI")||""
+      setUpStore(true)
+      const result = await api.get("/user/",{withCredentials:true})
+      setUser(result.data)
+      setUpSocket()
+
+    }catch{
+    }
+  }else{
+      try{ 
+          const is_online:boolean = await invoke("is_online")
+          setOnline(is_online)
+      }catch { }
+      try{ 
+          await invoke("initiate_db")
+          // await invoke("test_fn")
+      }catch { console.log('error on test')}
   }
   setLoaded(true)
-  animate(false,".app")
+  })
+  onCleanup(() => {
+    socket().send(JSON.stringify({type:"quit",data:""}))
+    socket().close()
   })
 
   return (

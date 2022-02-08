@@ -7,7 +7,7 @@ interface LoginProps extends ComponentProps<any> {
 }
 
 const Login: Component<LoginProps> = (props: LoginProps) => {
-    const [{navigate, animate, api},{setForm, setNotification, setUser, setPathfunc,setUpStore}] = useUserContext()
+    const [{navigate, animate, api, native, user, socket},{setForm, setNotification, setUser, setPathfunc,setUpStore, setCookie, setUpSocket}] = useUserContext()
     const [email, setEmail] = createSignal<string>("")
     const [password, setPassword] = createSignal<string>("")
     
@@ -18,10 +18,15 @@ const Login: Component<LoginProps> = (props: LoginProps) => {
             password: password()
         }
         try{
-            const result = await api.post("/login",form,{withCredentials:true})
-            setUser(result.data)
+            const result = await api.post("/login",form,{withCredentials:true, params:{native:native()}})
+            setUser(result.data.user)
+            api.defaults.headers.common['Authorization'] = result.data.api_key;
+            setCookie("POSAPI", result.data.api_key, 8)
             setNotification(false,"Logged in!")
             setUpStore(true)
+            if(socket().readyState != 1){
+                setUpSocket()
+            }
             animate(true,".login",navigate,"/")
         }catch(err){
             setNotification(true,"Error logging in!")
@@ -52,6 +57,16 @@ const Login: Component<LoginProps> = (props: LoginProps) => {
                         <div class="mt-2">
                             <button onClick={()=>animate(true,".login",navigate,"/createaccount")} class="btn btn-dark col-6"> Create Account</button>
                         </div>
+                        {
+                            native()?<div class="mt-2">
+                            <button onClick={()=>{
+                                setUser({...user(),id:0, name: 'local'})
+                                setNotification(false,"Logged in!")
+                                setUpStore(true)
+                                animate(true,".login",navigate,"/")
+                            }} class="btn btn-dark col-6">Local</button>
+                        </div>:<></>
+                        }
                     </div>
                 </div>
             </div>

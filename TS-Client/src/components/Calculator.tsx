@@ -1,5 +1,7 @@
+import { invoke } from '@tauri-apps/api/tauri';
+import { AxiosResponse } from 'axios';
 import { Component, ComponentProps, Accessor, Setter } from 'solid-js';
-import { TicketItem } from '../context/Models';
+import { TicketItem, BaseTicket } from '../context/Models';
 import { useUserContext, testTicket } from '../context/UserContext';
 
 interface CalculatorProps extends ComponentProps<any> {
@@ -9,7 +11,7 @@ interface CalculatorProps extends ComponentProps<any> {
 }
 
 const Calculator: Component<CalculatorProps> = (props: CalculatorProps) => {
-    const [{ticket, api, orders, round},{setTicket, updateTicket, setNotification, setOrders, setModalAnimation}] = useUserContext()
+    const [{ticket, api, orders, round, native},{setTicket, updateTicket, setNotification, setOrders, setModalAnimation}] = useUserContext()
     const addInput = (x: number): undefined =>{
         props.qty()!=0?props.setQty(y=>parseInt(`${y}${x}`)):props.setQty(x)
         return undefined
@@ -46,15 +48,21 @@ const Calculator: Component<CalculatorProps> = (props: CalculatorProps) => {
         setTicket({...ticket(),items:[...ticket().items.slice(0,-1)]})
     }
     const pay = () => {setModalAnimation("pay","Paying ticket",[round(ticket().subTotal+ticket().tax),ticket().id])}
+    //!*
     const createOrder = async() => {
-        let strList = ""
-        ticket().items.forEach((x:TicketItem) => strList += `${JSON.stringify(x)},`)
-        const form = {
-            ...ticket(),
-        }
+        // let strList = ""
+        // ticket().items.forEach((x:TicketItem) => strList += `${JSON.stringify(x)},`)       
+        
         try{ 
-            const result = await api.post("/order/",form,{withCredentials:true})
-            setOrders([...orders(),result.data])
+            if(native()){
+                const id:number = await invoke("create_order", {...ticket(),jsType:ticket().type})
+                setOrders([...orders(),{...ticket(),id:id} ])
+
+
+            }else{
+                const result = await api.post("/order/",ticket(),{withCredentials:true})
+                setOrders([...orders(),result.data ])
+            }
             setNotification(false,"Created Order")
             setTicket(testTicket)
         }catch(err){
@@ -72,46 +80,46 @@ const Calculator: Component<CalculatorProps> = (props: CalculatorProps) => {
                 <input class='col m-1' disabled value={props.qty()}/>
                 </div>
                 <hr/>
-                <div class='row w-100 btnFix'>
+                <div class='row w-100 btnFix gap-.5'>
                     <div class='col-4 btnContainer text-center'>
-                        <button class='btn btn-dark w-50' onClick={()=>addInput(7)}>7</button>
+                        <button class='btn btn-dark w' onClick={()=>addInput(7)}>7</button>
                     </div>
                     <div class='col-4 btnContainer text-center'>
-                        <button class='btn btn-dark w-50' onClick={()=>addInput(8)}>8</button>
+                        <button class='btn btn-dark w' onClick={()=>addInput(8)}>8</button>
                     </div>
                     <div class='col-4 btnContainer text-center'>
-                        <button class='btn btn-dark w-50' onClick={()=>addInput(9)}>9</button>
+                        <button class='btn btn-dark w' onClick={()=>addInput(9)}>9</button>
                     </div>
                     <div class='col-4 btnContainer text-center'>
-                        <button class='btn btn-dark w-50' onClick={()=>addInput(4)}>4</button>
+                        <button class='btn btn-dark w' onClick={()=>addInput(4)}>4</button>
                     </div>
                     <div class='col-4 btnContainer text-center'>
-                        <button class='btn btn-dark w-50' onClick={()=>addInput(5)}>5</button>
+                        <button class='btn btn-dark w' onClick={()=>addInput(5)}>5</button>
                     </div>
                     <div class='col-4 btnContainer text-center'>
-                        <button class='btn btn-dark w-50' onClick={()=>addInput(6)}>6</button>
+                        <button class='btn btn-dark w' onClick={()=>addInput(6)}>6</button>
                     </div>
                     <div class='col-4 btnContainer text-center'>
-                        <button class='btn btn-dark w-50' onClick={()=>addInput(1)}>1</button>
+                        <button class='btn btn-dark w' onClick={()=>addInput(1)}>1</button>
                     </div>
                     <div class='col-4 btnContainer text-center'>
-                        <button class='btn btn-dark w-50' onClick={()=>addInput(2)}>2</button>
+                        <button class='btn btn-dark w' onClick={()=>addInput(2)}>2</button>
                     </div>
                     <div class='col-4 btnContainer text-center'>
-                        <button class='btn btn-dark w-50' onClick={()=>addInput(3)}>3</button>
+                        <button class='btn btn-dark w' onClick={()=>addInput(3)}>3</button>
                     </div>
                     <div class='col-4 btnContainer text-center'>
-                        <button class='btn btn-dark w-50' onClick={()=>props.setQty(0)}>C</button>
+                        <button class='btn btn-dark w' onClick={()=>props.setQty(0)}>C</button>
                     </div>
                     <div class='col-4 text-center'>
-                        <button class='btn btn-dark w-50' onClick={()=>addInput(0)}>0</button>
+                        <button class='btn btn-dark w' onClick={()=>addInput(0)}>0</button>
                     </div>
                     <div class='col-4 text-center'>
-                        <button onClick={delItemFromTicket} class='btn btn-dark w-50' >{'<-'}</button>
+                        <button onClick={delItemFromTicket} class='btn btn-dark w' >{'<-'}</button>
                     </div>
                 </div>
                 <div class='row m-1 d-flex justify-content-center'>
-                    <div class='col-4'>
+                    <div class='col-5'>
                         <label class='m-1'>Credit: </label>
                         <input onClick={()=>setTicket({...ticket(),credit:ticket().credit?false:true})} type='checkbox' checked={ticket().credit}/>
                     </div>

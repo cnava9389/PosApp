@@ -1,6 +1,7 @@
 import { Accessor, JSX, Setter } from 'solid-js'
 import { Navigator } from "solid-app-router"
 import { AxiosInstance, AxiosResponse } from "axios"
+import {Socket} from "net"
 
 export interface BaseUser {
     id: number
@@ -15,6 +16,7 @@ export interface BaseUser {
     zipCode: string
     apt: string 
     auth: string
+    businessCode:string
 } 
 
 export interface Item {
@@ -101,10 +103,11 @@ export class User implements BaseUser {
     zipCode: string;
     apt: string;
     auth:string;
+    businessCode:string
 
     constructor(id: number, name: string, ppic: string, email: string, phone: string,
          street: string, street2: string, city: string, state: string, zipCode: string,
-         apt: string, auth: string){
+         apt: string, auth: string, businessCode: string){
             this.id = id
             this.name = name;
             this.ppic = ppic;
@@ -117,6 +120,7 @@ export class User implements BaseUser {
             this.zipCode = zipCode;
             this.apt = apt;
             this.auth = auth;
+            this.businessCode = businessCode;
          }
 }
 export interface Config {
@@ -125,6 +129,11 @@ export interface Config {
     inputType?: string
     className?:string
     callback?:(x:any)=>void
+}
+
+export interface MetaData {
+    isNative: boolean
+    localDataBase:boolean
 }
 
 export interface AppState {
@@ -141,13 +150,22 @@ export interface AppState {
     api: AxiosInstance
     callback: (callback: () => void) => boolean
     loaded: Accessor<boolean>
+    online: Accessor<boolean>
+    native: Accessor<boolean>
+    metaData: Accessor<MetaData>
     modal: Accessor<Modal>
-    round: (x:number)=>number
+    round: (x:number)=>number,
+    getCookie: (name: string) => string | null
+    eraseCookie(name: string): void
+    socket: Accessor<WebSocket>
 }
 
 export interface AppAction { 
     setOrders: Setter<Array<BaseTicket>>
     setLoaded: Setter<boolean>
+    setMetaData: Setter<MetaData>
+    setNative: Setter<boolean>
+    setOnline: Setter<boolean>
     setItems: Setter<Array<Item>>
     setPath: Setter<string>
     setTicket: Setter<Ticket>
@@ -160,10 +178,15 @@ export interface AppAction {
          setState: Array<Setter<string | number | string[]>>, config?: Array<Config>) => JSX.Element
     setPathfunc: ()=>void
     setUpStore: (invoke?: boolean | undefined) => Promise<{
-        fetchItems: () => Promise<AxiosResponse<Item[], any>>;
+        fetchItems: () => Promise<unknown>;
+        fetchOrders: () => Promise<AxiosResponse<Ticket[], any>>;
     }[]>
+    
     updateTicket: (currentTotal: number) => void
     setModal: Setter<Modal>
+    setCookie: (name: string, value: string, days: number) => void
+    setSocket: Setter<WebSocket>
+    setUpSocket: () => void
 }
 
 export interface AppStore extends Array<AppState | AppAction> {
