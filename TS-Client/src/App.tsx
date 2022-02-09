@@ -95,7 +95,6 @@ const App:Component = () => {
   setLoaded(true)
   })
   onCleanup(() => {
-    socket().send(JSON.stringify({type:"quit",data:""}))
     socket().close()
   })
 

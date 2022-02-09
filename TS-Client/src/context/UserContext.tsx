@@ -35,25 +35,30 @@ const [metaData, setMetaData] = createSignal<MetaData>({isNative:false,localData
 const [socket, setSocket] = createSignal<WebSocket>({} as WebSocket)
 
 const setUpSocket = () => {
-    setSocket(new WebSocket(`${import.meta.env.VITE_SOCKET}/socket/`))
-    socket().addEventListener("open", ()=>{
-        socket().send(JSON.stringify({type:"join",data:user().businessCode}))
-      })
-      socket().addEventListener("message", (event)=>{
-            const message:{type:string,data:string} = JSON.parse(event.data)
-            console.log(message)
-            switch(message.type){
-                case "message":
-                    console.log("from socket\n",message.data)
-                    break;
-                default: 
-                    console.log("could not find message type for ",message.type)
-            }
-
-      })
-      socket().addEventListener("error", (event)=>{
-        console.log("error occurred\n",event)
-      })
+    try{
+        setSocket(new WebSocket(`${import.meta.env.VITE_SOCKET}/socket/`))
+        socket().addEventListener("open", ()=>{
+            //socket().send(JSON.stringify({type:"join",data:user().businessCode}))
+            console.log("opened")
+          })
+          socket().addEventListener("message", (event)=>{
+                const message:{type:string,data:string} = JSON.parse(event.data)
+                console.log(message)
+                switch(message.type){
+                    case "message":
+                        console.log("from socket\n",message.data)
+                        break;
+                    default: 
+                        console.log("could not find message type for ",message.type)
+                }
+    
+          })
+          socket().addEventListener("error", (event)=>{
+            console.log("error occurred\n",event)
+          })
+    }catch(err){
+        console.log(err)
+    }
 }
 
 function setCookie(name:string,value:string,days:number) {

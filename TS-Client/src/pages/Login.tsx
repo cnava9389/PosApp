@@ -24,7 +24,7 @@ const Login: Component<LoginProps> = (props: LoginProps) => {
             setCookie("POSAPI", result.data.api_key, 8)
             setNotification(false,"Logged in!")
             setUpStore(true)
-            if(socket().readyState != 1){
+            if(socket().readyState == undefined || socket().readyState != 1 ){
                 setUpSocket()
             }
             animate(true,".login",navigate,"/")
