@@ -36,7 +36,7 @@ const [socket, setSocket] = createSignal<WebSocket>({} as WebSocket)
 
 const setUpSocket = () => {
     try{
-        setSocket(new WebSocket(`${import.meta.env.VITE_SOCKET}/socket/`))
+        setSocket(new WebSocket(`${import.meta.env.VITE_SOCKET}/ws`))
         socket().addEventListener("open", ()=>{
             //socket().send(JSON.stringify({type:"join",data:user().businessCode}))
             console.log("opened")
