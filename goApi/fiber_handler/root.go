@@ -2,19 +2,19 @@ package fiber_handler
 
 import (
 	"main/models"
-	"main/socket"
+	_"main/socket"
 	"github.com/gofiber/fiber/v2"
 )
 
 func Start(app *fiber.App, orm *models.ORM) {
 	sql,_ := orm.RDB.DB()
 	defer sql.Close()
-	s:= socket.NewServer()
+	// s:= socket.NewServer()
 
 	app.Use(CORS(orm))
-	app.Get("/socket", originCheck(orm))
+	// app.Get("/socket", originCheck(orm))
 
-	app.Get("/socket", socket.WsEndpoint(s))
+	// app.Get("/socket", socket.WsEndpoint(s))
 	app.Post("/login", loginHandler(orm))
 	// app.Get("/logout", logout)
 	app.Get("/", homeHandler)

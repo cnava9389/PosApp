@@ -19,3 +19,4 @@
 /goApi/fiber_handler/fullchain.pem
 /goApi/fiber_handler/privkey.pem
 /goApi/privkey.pem
+/socket/target

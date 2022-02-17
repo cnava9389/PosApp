@@ -278,11 +278,13 @@ func CORS(orm *models.ORM) func(c *fiber.Ctx) error {
 				host = fmt.Sprintf("http://%s:%s",c.IP(),port)
 			}else{
 				if(orm.Test){
-					host = fmt.Sprintf("http://10.0.0.196:%s",port)
+					// host = fmt.Sprintf("http://10.0.0.196:%s",port)
+					host = fmt.Sprintf("http://10.0.0.182:%s",port)
 				}else{
 					host = "https://www.navapos.com"
 				}
 			}
+			println(host, c.IP())
 			//*
 			c.Set("Access-Control-Allow-Methods", "OPTIONS, GET, POST, PUT, DELETE, HEAD, PATCH")
 			c.Set("Access-Control-Allow-Origin", host)

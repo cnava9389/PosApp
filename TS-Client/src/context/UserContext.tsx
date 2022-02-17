@@ -34,23 +34,26 @@ const [online, setOnline] = createSignal<boolean>(true);
 const [metaData, setMetaData] = createSignal<MetaData>({isNative:false,localDataBase:true})
 const [socket, setSocket] = createSignal<WebSocket>({} as WebSocket)
 
-const setUpSocket = () => {
+const setUpSocket = async() => {
     try{
         setSocket(new WebSocket(`${import.meta.env.VITE_SOCKET}/ws`))
+
         socket().addEventListener("open", ()=>{
             //socket().send(JSON.stringify({type:"join",data:user().businessCode}))
+            socket().send("Hello")
             console.log("opened")
           })
           socket().addEventListener("message", (event)=>{
-                const message:{type:string,data:string} = JSON.parse(event.data)
-                console.log(message)
-                switch(message.type){
-                    case "message":
-                        console.log("from socket\n",message.data)
-                        break;
-                    default: 
-                        console.log("could not find message type for ",message.type)
-                }
+              console.log(event.data)
+                // const message:{type:string,data:string} = JSON.parse(event.data)
+                // console.log(message)
+                // switch(message.type){
+                //     case "message":
+                //         console.log("from socket\n",message.data)
+                //         break;
+                //     default: 
+                //         console.log("could not find message type for ",message.type)
+                // }
     
           })
           socket().addEventListener("error", (event)=>{
