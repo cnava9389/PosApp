@@ -21,3 +21,4 @@
 /goApi/privkey.pem
 /socket/target
 /socket/src/.main.rs.swp
+/socket/.env
