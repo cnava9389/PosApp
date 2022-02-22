@@ -1,20 +1,27 @@
 package fiber_handler
 
 import (
+	_"fmt"
 	"main/models"
-	_"main/socket"
+	"main/socket"
+	_ "path/filepath"
+
 	"github.com/gofiber/fiber/v2"
+	_"github.com/gofiber/websocket/v2"
 )
 
 func Start(app *fiber.App, orm *models.ORM) {
 	sql,_ := orm.RDB.DB()
 	defer sql.Close()
-	// s:= socket.NewServer()
+	s:= socket.NewServer()
+
+	app.Use("/ws", originCheck(orm))
+	app.Get("/ws", socket.WsEndpoint(s))
 
 	app.Use(CORS(orm))
-	// app.Get("/socket", originCheck(orm))
 
-	// app.Get("/socket", socket.WsEndpoint(s))
+	// app.Use("/socket", originCheck(orm))
+
 	app.Post("/login", loginHandler(orm))
 	// app.Get("/logout", logout)
 	app.Get("/", homeHandler)
@@ -46,14 +53,14 @@ func Start(app *fiber.App, orm *models.ORM) {
 		return c.Status(fiber.StatusNotFound).SendString("404 could not find that!")
 	})
 	
-	// socket.Main()
+	// go socket.Main()
 	if(orm.Test){
 		if err := app.Listen(":8000"); err != nil {
 			panic(err)
 		}
 		}else{
-		if err := app.Listen(":8000"); err != nil {
-		// if err := app.ListenTLS(":8000","./letsencrypt/live/api.navapos.com/cert.pem","../../letsencrypt/live/api.navapos.com/privkey.pem"); err != nil {
+		// if err := app.Listen(":8000"); err != nil {
+		if err := app.ListenTLS(":443","./fullchain.pem","./privkey.pem"); err != nil {
 			panic(err)
 		}
 	}

@@ -20,3 +20,4 @@
 /goApi/fiber_handler/privkey.pem
 /goApi/privkey.pem
 /socket/target
+/socket/src/.main.rs.swp
