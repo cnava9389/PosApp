@@ -1,16 +1,19 @@
 package models
 
 import (
+	"database/sql/driver"
+	"encoding/json"
 	"errors"
-	_"fmt"
+	"fmt"
+	_ "fmt"
 	"strings"
 	"time"
-	"encoding/json"
+
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
-	"database/sql/driver"
 )
+
 // JSONB Interface for JSONB Field of yourTableName Table
 type JSONB []interface{}
 
@@ -140,7 +143,7 @@ func GetOrders(orm *ORM) func(c * fiber.Ctx) error {
 		db := orm.ReturnDB(info.DB)
 		orders := make([]Order, 1)
 
-		db.Find(&orders)
+		db.Limit(250).Find(&orders)
 
 		return c.Status(fiber.StatusOK).JSON(&orders)
 	}
@@ -163,6 +166,21 @@ func GetOrder(orm *ORM) func(c * fiber.Ctx) error {
 		return c.Status(fiber.StatusOK).JSON(&order)
 	}
 	return fn
+}
+func GetDateOrders(orm *ORM) func(c * fiber.Ctx) error {
+	return func(c * fiber.Ctx) error {
+		date := c.Query("date")
+		info := c.Locals("info").(*CookieInfo)
+		db := orm.ReturnDB(info.DB)
+
+		orders := make([]Order, 1)
+		
+		fmt.Println(date)
+
+		db.Where("created_at BETWEEN ? AND ?", fmt.Sprintf("%s 00:00:00",date),fmt.Sprintf("%s 23:59:59",date)).Find(&orders)
+
+		return c.Status(fiber.StatusOK).JSON(&orders)
+	}
 }
 
 func DeleteOrder(c *fiber.Ctx) error {

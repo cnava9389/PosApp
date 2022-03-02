@@ -4,13 +4,12 @@ import { BaseTicket, TicketItem } from "../context/Models";
 import { useUserContext } from "../context/UserContext";
 
 interface OrdersProps extends ComponentProps<any> {
-  orders:Accessor<Array<BaseTicket>>
 }
 
 const Orders: Component = () => {
   const [{ animate,orders }, { setPathfunc }] = useUserContext();
   const [option, setOption] = createSignal("a");
-  const [rOrders, setRorders] = createSignal([...orders()].reverse())
+  const [rOrders, setRorders] = createSignal<BaseTicket[]>([])
   let one: any, two: any, four: any;
   onMount(() => {
     setPathfunc();
@@ -27,18 +26,18 @@ const Orders: Component = () => {
   const listSetter = (option: string) => {
     switch (option) {
       case "All":
-        return <All orders={rOrders}/>;
+        return <All/>;
       case "Paid":
-        return <Paid orders={rOrders}/>;
+        return <Paid/>;
       case "Un-Paid":
-        return <UnPaid orders={rOrders}/>;
+        return <UnPaid/>;
       default:
-        return <All orders={rOrders}/>;
+        return <All/>;
     }
   };
   return (
     <div
-      class="orders h-100 d-flex justify-content-center align-items-center"
+      class="orders h-100 p-2 d-flex justify-content-center align-items-center"
       style={{ opacity: 0 }}
     >
       <div class="h-100 w-50 card shadow-lg ticketList customBack">
@@ -69,23 +68,22 @@ const Orders: Component = () => {
 
 export default Orders;
 
-const All = (props: OrdersProps) => {
-   const [{ native }, { }] = useUserContext();
+const All = () => {
+   const [{ native, orders }, { }] = useUserContext();
   const helper = () => {
-    switch(props.orders().length){
+    switch(orders().length){
         case 0: 
             return <>No orders</>
         default:
             return <>
             {
-                props.orders().map((x: BaseTicket) => {
-                  console.log(x)
+                [...orders()].reverse().map((x: BaseTicket) => {
                   let date;
                   let time
                     if(native()){
                       date = x.dateTime.split(" ");
-                      time = date[1]
-                      console.log(date)
+                      let split = date[1].split(":")
+                      time = `${split[0]}:${parseInt(split[1])<10?`0${split[1]}`:split[1]}`
                     }else{
 
                       date = x.dateTime.split("T");
@@ -139,10 +137,10 @@ const All = (props: OrdersProps) => {
 };
 
 const UnPaid = (props: OrdersProps) => {
-  const [{ round }, {setModalAnimation}] = useUserContext();
+  const [{ round, orders, native }, {setModalAnimation}] = useUserContext();
 
   const helper = () => {
-    const list = props.orders().filter((x:BaseTicket)=>{return !x.paid}) 
+    const list = orders().filter((x:BaseTicket)=>{return !x.paid}) 
     switch(list.length){
         case 0: 
             return <>All orders paid</>
@@ -150,14 +148,23 @@ const UnPaid = (props: OrdersProps) => {
             return <>
             {
                 list.map((x: BaseTicket) => {
-                    let date = x.dateTime.split("T");
-                    const time = date[1].split(".");
+                  let date;
+                  let time
+                  if(native()){
+                    date = x.dateTime.split(" ");
+                    let split = date[1].split(":")
+                    time = `${split[0]}:${parseInt(split[1])<10?`0${split[1]}`:split[1]}`
+                  }else{
+
+                    date = x.dateTime.split("T");
+                    time = date[1].split(".");
+                  }
                     return (
                       <div class="h-50 w-100 card text-center shadow-lg" >
                         <div class="card-title">ID: {x.id}{x.name?` Name: ${x.name}`:''}</div>
                         <div class="card-subtitle">
                           <div className="row">
-                            <div>{`${date[0]}; ${time[0]}`}</div>
+                            <div>{`${date[0]}; ${!native()?time[0]:time}`}</div>
                           </div>
                           <i
                             class="bi bi-chevron-double-down col-1 btn"
@@ -184,7 +191,13 @@ const UnPaid = (props: OrdersProps) => {
                             })}
                             <div>
                                 <button onClick={()=>{
-                                    setModalAnimation("pay","Paying ticket",[round(x.subTotal+x.tax),x.id])
+                                  console.log(round(x.subTotal+x.tax),x)
+                                    if(native()){
+                                      //!
+                                      setModalAnimation("pay","Paying ticket",[round(x.subTotal+x.tax),x.id])
+                                    }else{
+                                      setModalAnimation("pay","Paying ticket",[round(x.subTotal+x.tax),x.id])
+                                    }
                                 }} class="btn btn-primary">pay!</button>
                             </div>
                           </div>
@@ -203,9 +216,9 @@ const UnPaid = (props: OrdersProps) => {
 };
 
 const Paid = (props: OrdersProps) => {
-    // const [{ orders }, { }] = useUserContext();
+    const [{ orders, native }, { }] = useUserContext();
     const helper = () => {
-        const list = props.orders().filter((x:BaseTicket)=>{return x.paid})
+        const list = [...orders()].reverse().filter((x:BaseTicket)=>{return x.paid})
         switch(list.length){
             case 0: 
                 return <>No paid orders</>
@@ -213,14 +226,22 @@ const Paid = (props: OrdersProps) => {
                 return <>
                 {
                     list.map((x: BaseTicket) => {
-                        let date = x.dateTime.split("T");
-                        const time = date[1].split(".");
+                      let date;
+                      let time
+                      if(native()){
+                        date = x.dateTime.split(" ");
+                        let split = date[1].split(":")
+                        time = `${split[0]}:${parseInt(split[1])<10?`0${split[1]}`:split[1]}`
+                      }else{
+                        date = x.dateTime.split("T");
+                        time = date[1].split(".");
+                      }
                         return (
                           <div class="h-50 w-100 card text-center shadow-lg" >
                             <div class="card-title">ID: {x.id}{x.name?` Name: ${x.name}`:''}</div>
                             <div class="card-subtitle">
                               <div className="row">
-                                <div>{`${date[0]}; ${time[0]}`}</div>
+                                <div>{`${date[0]}; ${!native()?time[0]:time}`}</div>
                               </div>
                               <i
                                 class="bi bi-chevron-double-down col-1 btn"

@@ -11,18 +11,16 @@ interface CalculatorProps extends ComponentProps<any> {
 }
 
 const Calculator: Component<CalculatorProps> = (props: CalculatorProps) => {
-    const [{ticket, api, orders, round, native},{setTicket, updateTicket, setNotification, setOrders, setModalAnimation}] = useUserContext()
+    const [{ticket, api, orders, round, native, socket},{setTicket, updateTicket, setNotification, setOrders, setModalAnimation}] = useUserContext()
     const addInput = (x: number): undefined =>{
         props.qty()!=0?props.setQty(y=>parseInt(`${y}${x}`)):props.setQty(x)
         return undefined
     }
     const delItemFromTicket= ():void =>{
         let amounts:number[] = []
-        console.log(ticket().items)
         ticket().items[ticket().items.length - 1].description.split(',').forEach((x:string)=>{
             const sub = x.split(" ")
             if (sub[2]=="yes"||sub[2]=="con"){
-                console.log(props.metaData())
                 if(sub.length==4){
                     //no money
                 }else if (sub.length==5){
@@ -54,17 +52,22 @@ const Calculator: Component<CalculatorProps> = (props: CalculatorProps) => {
         // ticket().items.forEach((x:TicketItem) => strList += `${JSON.stringify(x)},`)       
         
         try{ 
+            //! type
+            let s_ticket
             if(native()){
                 const id:number = await invoke("create_order", {...ticket(),jsType:ticket().type})
-                setOrders([...orders(),{...ticket(),id:id} ])
+                s_ticket = {...ticket(),id:id}
+                setOrders([...orders(), s_ticket])
 
 
             }else{
                 const result = await api.post("/order/",ticket(),{withCredentials:true})
-                setOrders([...orders(),result.data ])
+                s_ticket = result.data
+                setOrders([...orders(),s_ticket ])
             }
             setNotification(false,"Created Order")
             setTicket(testTicket)
+            socket().send(JSON.stringify({type:"ECHO", data:JSON.stringify({type:"CREATE_ORDER", data:s_ticket})}))
         }catch(err){
             console.log(err)
             setNotification(true,"Error creating order")
@@ -127,9 +130,9 @@ const Calculator: Component<CalculatorProps> = (props: CalculatorProps) => {
             </div>
         </div>
             <div class='row'>
-                {/* <div class='col-12 d-flex justify-content-center mb-md-3'>
+                <div class='col-12 d-flex justify-content-center mb-md-3'>
                 <button onClick={pay} class='btn btn-success'>Pay</button>
-                </div> */}
+                </div>
                 <div class='col-12 d-flex justify-content-center mb-md-3'>
                 <button onClick={createOrder} class='btn btn-dark'>Send</button>
                 </div>

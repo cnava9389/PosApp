@@ -6,13 +6,11 @@ import axios,{AxiosResponse} from "axios"
 import { invoke } from '@tauri-apps/api/tauri'
 
 
-
-
 interface UserProviderProps extends ComponentProps<any> {
     // add props here
 }
 const date = new Date()
-export const testUser = new User(-1,"","","","","","","","","","","","")
+export const testUser = new User(-1,"","","","","","","","","","","","","")
 export const testTicketItem = {qty:1,name:"Taco",price:0.0,description:"something",type:"food",id:-1}
 export const testTicket = {id:-1,credit:false,dateTime:`${date.toLocaleDateString()} ${date.getHours()}:${date.getMinutes()}`,description:"",
 employee:"",items:[],name:"",paid:false,subTotal:0.0,tax:0.0,type:"pickup"}
@@ -33,36 +31,75 @@ const [online, setOnline] = createSignal<boolean>(true);
 // const [localDB, setLocalDB ] = createSignal<boolean>(true);
 const [metaData, setMetaData] = createSignal<MetaData>({isNative:false,localDataBase:true})
 const [socket, setSocket] = createSignal<WebSocket>({} as WebSocket)
+const [socketSet, setSocketSet] = createSignal(false)
 
 const setUpSocket = async() => {
-    try{
-        setSocket(new WebSocket(`${import.meta.env.VITE_SOCKET}/ws`))
-
-        socket().addEventListener("open", ()=>{
-            //socket().send(JSON.stringify({type:"join",data:user().businessCode}))
-            socket().send("Hello")
-            console.log("opened")
-          })
-          socket().addEventListener("message", (event)=>{
-              console.log(event.data)
-                // const message:{type:string,data:string} = JSON.parse(event.data)
-                // console.log(message)
-                // switch(message.type){
-                //     case "message":
-                //         console.log("from socket\n",message.data)
-                //         break;
-                //     default: 
-                //         console.log("could not find message type for ",message.type)
-                // }
-    
-          })
-          socket().addEventListener("error", (event)=>{
-            console.log("error occurred\n",event)
-          })
-    }catch(err){
-        console.log(err)
+    if (!socketSet()){
+        try{            
+            socket().addEventListener("open", ()=>{
+                // socket().send("Hello")
+                console.log("opened")
+            })
+            //! types
+            socket().addEventListener("message", (event)=>{
+                let message = JSON.parse(event.data)
+                switch (message.type) {
+                    case "ERROR":
+                        console.log("error\n",message)
+                    break;
+                    case "ECHO":
+                        console.log(message)
+                        let command = JSON.parse(message.data)
+                        switch (command.type) {
+                        case "CREATE_ORDER":
+                            console.log("creating order\n",command.data)
+                            setOrders([...orders(), command.data ])
+                            break;
+                        case "CREATE_ITEM":
+                            console.log("creating item\n",command.data)
+                            setItems(x=>[...x,command.data])
+                            break;
+                        case "DELETE_ITEM":
+                            console.log("deleting item\n",command.data)
+                            setItems((x:Array<Item>)=>x.filter((x:Item)=>{
+                                if (x.id != command.data){
+                                    return x
+                                }
+                            }))
+                            break;
+                        default:
+                            console.log("unknown case")
+                            break;
+                    }
+                    break;
+                    case "JOIN":
+                    console.log(message.data)
+                    break;
+                case "UNAME":
+                    console.log(`name has been set to ${message.data}`)
+                    break;
+                case "RNAME":
+                    console.log(message.data)
+                    break;
+                default:
+                    console.log("did not find case\n",message)
+                    break;
+                }
+            })
+            
+            socket().addEventListener("error", (event)=>{
+                console.log("error occurred\n",event)
+            })
+            await sleep(150)
+            socket().send(JSON.stringify({type:"UNAME",data:`${user().name}${Math.random()*100}`}))
+            socket().send(JSON.stringify({type:"JOIN",data:user().businessCode}))
+            // socket().send(JSON.stringify({type:"ERROR",data:user().businessCode}))
+        }catch(err){
+            console.log(err)
+        }
+        setSocketSet(true)
+        }
     }
-}
 
 function setCookie(name:string,value:string,days:number) {
     var expires = "";
@@ -224,7 +261,13 @@ const setUpStore = async(invoke?:boolean) => {
 
             result = result.data?result.data:result 
             result2 = result2.data?result2.data:result2 
+            result2 = result2 as Array<BaseTicket>
 
+            result2.sort((a,b)=>{
+                if(a.id > b.id) return 1;
+                if(a.id < b.id) return -1;
+                return 0;
+            })
             setItems(result as Array<Item>)
             setOrders(result2 as Array<BaseTicket>)
             setTicket(new Ticket(-1,"","",[],"","pickup"))

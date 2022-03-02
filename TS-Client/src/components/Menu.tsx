@@ -75,9 +75,10 @@ const Items = (props: MenuProps) => {
   const [{items, ticket},{setTicket, updateTicket}] = useUserContext()
   const buttonClick = (x:Item) => {
     const Qty = props.qty()===0?1:props.qty()
-    setTicket({...ticket(),items:[...ticket().items,{qty:Qty,name:x.name,type:x.type,price:x.price,description:''}]})
+    const x_price = x.price || 0.0
+    setTicket({...ticket(),items:[...ticket().items,{qty:Qty,name:x.name,type:x.type,price:x_price,description:''}]})
     props.setQty(0)
-    const price = x.price * Qty
+    const price = x_price * Qty
     updateTicket(price)
   }
   return <>

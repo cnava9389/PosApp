@@ -1,3 +1,4 @@
+import { invoke } from '@tauri-apps/api/tauri';
 import { Component, ComponentProps, onMount } from 'solid-js';
 import { useUserContext } from '../context/UserContext';
 
@@ -6,11 +7,18 @@ interface HomeProps extends ComponentProps<any> {
 }
 
 const Home: Component<HomeProps> = () => {
-    const [{navigate, animate, user},{setPathfunc, setUpStore}] = useUserContext()
-    onMount(()=>{
+    const [{navigate, animate, user, socket, native, sleep},{setPathfunc, setUpSocket}] = useUserContext()
+    onMount(async()=>{
         if (user().name != ""){
             setPathfunc()
             animate(false,".home")
+        }
+        if (socket().readyState == 1) {
+            setUpSocket()
+        }else if(socket().readyState != 1 && native()){
+            invoke("test_fn")
+            await sleep(500)
+            setUpSocket()
         }
     })
     return (

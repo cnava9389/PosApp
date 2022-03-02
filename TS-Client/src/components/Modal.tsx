@@ -2,13 +2,14 @@ import { Component, ComponentProps, createSignal, onMount } from "solid-js";
 import { useUserContext } from "../context/UserContext";
 import {gsap} from "gsap"
 import { BaseTicket, TicketItem } from "../context/Models";
+import { invoke } from "@tauri-apps/api/tauri";
 
 interface ModalProps extends ComponentProps<any> {
   // add props here
 }
 
 const Modal: Component<ModalProps> = () => {
-  const [{ modal,api,orders,round}, {setNotification, setForm,setOrders}] = useUserContext();
+  const [{ modal,api,orders,round, native}, {setNotification, setForm,setOrders}] = useUserContext();
   const [credit, setCredit] = createSignal(false);
   const [amount, setAmount] = createSignal(0);
   ({amount:-1,id:0,subTotal:-1,tax:-1,credit:false,paid:true});
@@ -26,7 +27,11 @@ const pay = async(e: Event) => {
             paid:true
         }
         try{
+          if (native()){
+            await invoke("pay_order",{id:modal().args![1],credit:credit(),paid:true})
+          }else{
             await api.put('/order/',form,{withCredentials:true})
+          }
             setCredit(false)
             setNotification(false,"Paid order")
             orders().forEach((x:BaseTicket)=>{

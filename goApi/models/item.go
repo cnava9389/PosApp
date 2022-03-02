@@ -88,7 +88,7 @@ func GetItems(orm *ORM) func(c * fiber.Ctx) error {
 		db := orm.ReturnDB(info.DB)
 		items := make([]Item, 1)
 
-		db.Find(&items)
+		db.Limit(300).Find(&items)
 		// if(items[0].ID==0){
 		// 	return c.Status(fiber.StatusBadRequest).SendString("Error collecting items")
 		// }

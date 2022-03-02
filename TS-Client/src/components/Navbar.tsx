@@ -62,6 +62,11 @@ const Navbar: Component<NavbarProps> = (props: NavbarProps) => {
           <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav">
               <li class="nav-item">
+                <Link href="/" class="nav-link">
+                  Home
+                </Link>
+              </li>
+              <li class="nav-item">
                 <Link href="/login" class="nav-link">
                   Log in
                 </Link>

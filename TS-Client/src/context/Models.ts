@@ -1,7 +1,6 @@
 import { Accessor, JSX, Setter } from 'solid-js'
 import { Navigator } from "solid-app-router"
 import { AxiosInstance, AxiosResponse } from "axios"
-import {Socket} from "net"
 
 export interface BaseUser {
     id: number
@@ -17,6 +16,7 @@ export interface BaseUser {
     apt: string 
     auth: string
     businessCode:string
+    business:string
 } 
 
 export interface Item {
@@ -104,10 +104,11 @@ export class User implements BaseUser {
     apt: string;
     auth:string;
     businessCode:string
+    business:string
 
     constructor(id: number, name: string, ppic: string, email: string, phone: string,
          street: string, street2: string, city: string, state: string, zipCode: string,
-         apt: string, auth: string, businessCode: string){
+         apt: string, auth: string, businessCode: string, business:string){
             this.id = id
             this.name = name;
             this.ppic = ppic;
@@ -121,6 +122,7 @@ export class User implements BaseUser {
             this.apt = apt;
             this.auth = auth;
             this.businessCode = businessCode;
+            this.business = business;
          }
 }
 export interface Config {

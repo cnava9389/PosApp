@@ -19,7 +19,7 @@ import { invoke } from '@tauri-apps/api/tauri'
 
 const App:Component = () => {
   const [{user, navigate, api, sleep, animate, loaded, native, getCookie, socket},
-  {setUser, setUpStore, setLoaded, setNative, setOnline, setUpSocket, setNotification}] = useUserContext();
+  {setUser, setUpStore, setLoaded, setNative, setOnline, setUpSocket, setSocket}] = useUserContext();
 
   const helper = (option:boolean) => {
     
@@ -46,8 +46,7 @@ const App:Component = () => {
               <Route path="/*all" element={<PageNotFound/>}/>
             </Routes>
             </div>
-
-        </>
+          </>
       case false:
         return <div class="d-flex justify-content-center align-items-center" style={{"height":"100vh"}}><h1 >Loading...</h1></div>
     }
@@ -66,34 +65,35 @@ const App:Component = () => {
 })
   onMount(async ()=>{
   try{ 
-    // window.__TAURI__.
-    // invoke("is_native").then(x => setNotification(false,`${x}`)).catch((e)=>setNotification(true,`${e.message}`))
+    // ! this try catch needs to stay
     const isNative:boolean = await invoke("is_native")
     setNative(isNative)
 
 
   }catch{  }
+  
   if(!native()){
     try{
       api.defaults.headers.common['Authorization'] = getCookie("POSAPI")||""
       setUpStore(true)
       const result = await api.get("/user/",{withCredentials:true})
       setUser(result.data)
-      setUpSocket()
+      if(socket().readyState!=1){
+        setSocket(new WebSocket(`${import.meta.env.VITE_SOCKET}/ws`))
+        setUpSocket()
+      }
+      
     }catch{
+      // error
     }
   }else{
-      try{ 
-          const is_online:boolean = await invoke("is_online")
-          setOnline(is_online)
-      }catch { }
-      try{ 
-          await invoke("initiate_db")
-          // await invoke("test_fn")
-      }catch { console.log('error on test')}
+      const is_online:boolean = await invoke("is_online")
+      setOnline(is_online)
+      await invoke("initiate_db")
   }
   setLoaded(true)
   })
+
   onCleanup(() => {
     socket().close()
   })

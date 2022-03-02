@@ -22,7 +22,7 @@ type echoServer = Arc<RwLock<server::Server>>;
 async fn main() {
     // gets args that are included when this file is run and sets that as the host:port or else a default is set
     dotenv::dotenv().ok();
-    let addr = env::args().nth(1).unwrap_or_else(|| "10.0.0.196:9000".to_string());
+    let addr = env::args().nth(1).unwrap_or_else(|| "127.0.0.1:9000".to_string());
     // parses socket address from addr
     let socket_addr: SocketAddr = addr.parse().expect("valid socket address");
 

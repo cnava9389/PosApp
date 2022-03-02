@@ -1,3 +1,4 @@
+import { invoke } from '@tauri-apps/api';
 import { Component, ComponentProps, createSignal, onMount } from 'solid-js';
 import { BaseUser } from '../context/Models';
 import { useUserContext } from '../context/UserContext'
@@ -7,7 +8,7 @@ interface LoginProps extends ComponentProps<any> {
 }
 
 const Login: Component<LoginProps> = (props: LoginProps) => {
-    const [{navigate, animate, api, native, user, socket},{setForm, setNotification, setUser, setPathfunc,setUpStore, setCookie, setUpSocket}] = useUserContext()
+    const [{navigate, sleep, animate, api, native, user, socket},{setForm, setNotification, setUser, setPathfunc,setUpStore, setCookie, setUpSocket, setSocket}] = useUserContext()
     const [email, setEmail] = createSignal<string>("")
     const [password, setPassword] = createSignal<string>("")
     
@@ -25,7 +26,7 @@ const Login: Component<LoginProps> = (props: LoginProps) => {
             setNotification(false,"Logged in!")
             setUpStore(true)
             if(socket().readyState == undefined || socket().readyState != 1 ){
-                setUpSocket()
+                setSocket(new WebSocket(`${import.meta.env.VITE_SOCKET}/ws`))
             }
             animate(true,".login",navigate,"/")
         }catch(err){
@@ -58,13 +59,16 @@ const Login: Component<LoginProps> = (props: LoginProps) => {
                         <div class="mt-2">
                             <button onClick={()=>animate(true,".login",navigate,"/createaccount")} class="btn btn-dark col-6"> Create Account</button>
                         </div>
-                        {
+                        {-
+
                             native()?<div class="mt-2">
-                            <button onClick={()=>{
-                                setUser({...user(),id:0, name: 'local'})
+                            <button onClick={async()=>{
+                                setUser({...user(),id:0, name: `local_user${Math.random()*100}`, businessCode:"local"})
                                 setNotification(false,"Logged in!")
                                 setUpStore(true)
                                 animate(true,".login",navigate,"/")
+                                setSocket(new WebSocket("ws://127.0.0.1:9000/ws"))
+
                             }} class="btn btn-dark col-6">Local</button>
                         </div>:<></>
                         }

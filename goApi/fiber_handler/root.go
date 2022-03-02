@@ -26,7 +26,7 @@ func Start(app *fiber.App, orm *models.ORM) {
 	// app.Get("/logout", logout)
 	app.Get("/", homeHandler)
 	
-	user := app.Group("/user")
+	user := app.Group("user")
 	user.Post("/", createAccountHandler(orm))
 	user.Use(checkCookie(orm))
 	user.Get("/", models.GetUser(orm))
@@ -49,6 +49,10 @@ func Start(app *fiber.App, orm *models.ORM) {
 	//! work on this
 	order.Delete("/", models.DeleteOrder)
 	
+	data := app.Group("data", checkCookie(orm))
+	data.Get("/orders/", models.GetDateOrders(orm))
+	// data.Get("/orders/", models.GetDateOrders(orm))
+
 	app.Use(func(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusNotFound).SendString("404 could not find that!")
 	})
