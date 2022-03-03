@@ -4,7 +4,7 @@ import {gsap} from "gsap"
 import { BaseTicket, TicketItem } from "../context/Models";
 import { invoke } from "@tauri-apps/api/tauri";
 
-interface ModalProps extends ComponentProps<any> {
+interface ModalProps {
   // add props here
 }
 

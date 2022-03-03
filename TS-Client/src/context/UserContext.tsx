@@ -253,9 +253,9 @@ const fetchOrders = (): Promise<AxiosResponse<Ticket[], any>> => {
 // const fetchUser = () => { return api.get<any, AxiosResponse<User,any>>("/user/",{withCredentials:true})}
 //!*
 const setUpStore = async(invoke?:boolean) => {
-    // setCookie("POSAPI","deezNuts",1)
     if(invoke){
         try{ 
+        
             let result = await fetchItems() as AxiosResponse<Array<Item>,any> | Array<Item>
             let result2 = await fetchOrders() as AxiosResponse<Array<BaseTicket>,any> | Array<BaseTicket>
 

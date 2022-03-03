@@ -7,7 +7,7 @@ import Items from '../components/Items';
 import Profile from '../components/Profile';
 
 
-interface SettingsProps extends ComponentProps<any> {
+interface SettingsProps {
     setOption:Setter<string>
 }
 

@@ -2,7 +2,7 @@ import { Component, ComponentProps } from "solid-js";
 import { Link } from "solid-app-router";
 import { useUserContext, testUser } from "../context/UserContext";
 
-interface NavbarProps extends ComponentProps<any> {
+interface NavbarProps {
   // add props here
 }
 

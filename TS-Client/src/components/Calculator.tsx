@@ -1,10 +1,10 @@
 import { invoke } from '@tauri-apps/api/tauri';
 import { AxiosResponse } from 'axios';
 import { Component, ComponentProps, Accessor, Setter } from 'solid-js';
-import { TicketItem, BaseTicket } from '../context/Models';
+import { TicketItem, BaseTicket, MetaData } from '../context/Models';
 import { useUserContext, testTicket } from '../context/UserContext';
 
-interface CalculatorProps extends ComponentProps<any> {
+interface CalculatorProps {
     qty: Accessor<number>
     setQty: Setter<number>
     metaData: Accessor<any>

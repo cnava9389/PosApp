@@ -9,7 +9,7 @@ import {
 import { BaseTicket, TicketItem } from "../context/Models";
 import { useUserContext } from "../context/UserContext";
 
-interface DataProps extends ComponentProps<any> {
+interface DataProps {
   setOption: (x: string, y: string) => void;
 }
 

@@ -1,7 +1,7 @@
 import { Component, ComponentProps, createSignal, onMount } from 'solid-js';
 import { useUserContext } from '../context/UserContext';
 
-interface CreateAccountProps extends ComponentProps<any> {
+interface CreateAccountProps {
     // add props here
 }
 

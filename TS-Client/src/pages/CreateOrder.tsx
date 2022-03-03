@@ -4,7 +4,7 @@ import Menu from '../components/Menu';
 import Ticket from '../components/Ticket';
 import { useUserContext } from '../context/UserContext';
 
-interface CreateOrderProps extends ComponentProps<any> {
+interface CreateOrderProps{
     // add props here
 }
 

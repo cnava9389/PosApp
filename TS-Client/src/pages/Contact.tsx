@@ -2,7 +2,7 @@ import { Component, ComponentProps, onMount } from 'solid-js';
 import { useUserContext } from '../context/UserContext';
 import img1 from '../assets/free-consultation.jpg'
 
-interface ContactProps extends ComponentProps<any> {
+interface ContactProps{
     // add props here
 }
 

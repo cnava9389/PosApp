@@ -2,7 +2,7 @@ import { Component, ComponentProps} from 'solid-js';
 import { TicketItem } from '../context/Models';
 import { useUserContext } from '../context/UserContext';
 
-interface TicketProps extends ComponentProps<any> {
+interface TicketProps {
     // add props here
 }
 

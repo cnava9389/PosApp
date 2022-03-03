@@ -3,7 +3,7 @@ import { Component, ComponentProps, createSignal, onMount } from 'solid-js';
 import { BaseUser } from '../context/Models';
 import { useUserContext } from '../context/UserContext'
 
-interface LoginProps extends ComponentProps<any> {
+interface LoginProps {
     // add props here
 }
 

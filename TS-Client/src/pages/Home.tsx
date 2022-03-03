@@ -2,7 +2,7 @@ import { invoke } from '@tauri-apps/api/tauri';
 import { Component, ComponentProps, onMount } from 'solid-js';
 import { useUserContext } from '../context/UserContext';
 
-interface HomeProps extends ComponentProps<any> {
+interface HomeProps {
     // add props here
 }
 
